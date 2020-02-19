@@ -12,7 +12,7 @@ namespace Surfrider.Jobs.Recurring
     {
         public static string ConnectionString = Environment.GetEnvironmentVariable("sqldb_connection");
         [FunctionName("PowerBIFillDatabase")]
-        public static async Task Run([TimerTrigger("*/15 * * * * *")]TimerInfo myTimer, ILogger log)
+        public static async Task Run([TimerTrigger("0 0 * * * *")]TimerInfo myTimer, ILogger log)
         {
 
             // TODO 
@@ -25,11 +25,11 @@ namespace Surfrider.Jobs.Recurring
             
             var startedOn = DateTime.Now;
             var newCampaigns = await RetrieveNewCampaigns(log);
-            await InsertNewCampaignsInBI(newCampaigns, log);
-            await InsertLog(startedOn, "OK", log);
+            var status = await InsertNewCampaignsInBI(newCampaigns, log);
+            if(newCampaigns.Count > 0) await InsertLog(startedOn, status, log);
         }
 
-        private static async Task InsertNewCampaignsInBI(IList<Guid> newCampaigns, ILogger log)
+        private static async Task<OperationStatus> InsertNewCampaignsInBI(IList<Guid> newCampaigns, ILogger log)
         {
             using (SqlConnection conn = new SqlConnection(ConnectionString))
             {
@@ -41,21 +41,27 @@ namespace Surfrider.Jobs.Recurring
                         await cmd.ExecuteNonQueryAsync();
                         log.LogInformation("Inserted new campaign with Id = " + campaignId);
                     }
-
                 }
             }
+            return OperationStatus.OK; // for now, let assume that everything went well
         }
 
-        private static async Task InsertLog(DateTime startedOn, string status, ILogger log)
+        private static async Task InsertLog(DateTime startedOn, OperationStatus status, ILogger log)
         {
             var finishedOn = DateTime.Now;
             var elapsedTime = finishedOn - startedOn;
-            var command = $"INSERT INTO bi.Logs VALUES ('{Guid.NewGuid()}','{startedOn}', '{finishedOn}', {elapsedTime}, '{status}')";
+            // see https://stackoverflow.com/a/23163325/12805412 
+            var command = $"INSERT INTO bi.Logs VALUES (@id, @startedOn, @finishedOn, @elapsedTime, @status)";
             using (SqlConnection conn = new SqlConnection(ConnectionString))
             {
                 conn.Open();
                 using (SqlCommand cmd = new SqlCommand(command, conn))
                 {
+                    cmd.Parameters.AddWithValue("@id", Guid.NewGuid());
+                    cmd.Parameters.AddWithValue("@startedOn", startedOn);
+                    cmd.Parameters.AddWithValue("@finishedOn", finishedOn);
+                    cmd.Parameters.AddWithValue("@elapsedTime", elapsedTime.TotalSeconds);
+                    cmd.Parameters.AddWithValue("@status", status.ToString());
                     await cmd.ExecuteNonQueryAsync();
                     log.LogInformation("Inserted logs with status = " + status);
                 }
