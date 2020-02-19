@@ -18,9 +18,9 @@ namespace Surfrider.Jobs.Recurring
             // TODO 
             // DONE - faire la bonne query sql pour update
             // DONE - tester en local
-            // upload avec timer 1x/h
-            // rajouter des logs
-            // save le code sur github
+            // DONE - upload avec timer 1x/h
+            // DONE - rajouter des logs
+            // DONE - save le code sur github
             // faire les différents calculs
             
             var startedOn = DateTime.Now;
