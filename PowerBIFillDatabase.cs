@@ -1,10 +1,10 @@
 using System;
 using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Host;
 using Microsoft.Extensions.Logging;
 using System.Data.SqlClient;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Surfrider.Jobs.Recurring
 {
@@ -12,116 +12,178 @@ namespace Surfrider.Jobs.Recurring
     {
         public static string ConnectionString = Environment.GetEnvironmentVariable("sqldb_connection");
         [FunctionName("PowerBIFillDatabase")]
-        public static async Task Run([TimerTrigger("0 0 * * * *")]TimerInfo myTimer, ILogger log)
+        public static async Task Run([TimerTrigger("0 0 * * * *")]TimerInfo myTimer, ILogger logger)
         {
 
-            // faire les différents calculs
-            
+            // TODO
+            // * DROP les campaign pour lesquels on a une erreur de calcul quelque part
+            // ** ComputeMetricsOnCampaignRiver()
+            // ** ComputeTrajectoryPointRiver()
+            // * Log les campaign pour lesquelles on a des erreur de calcul quelque part
+
             var startedOn = DateTime.Now;
 
-            // recup des traces GPS du kayak (trajectory_point)
-            //     On vient calculer la distance, la vitesse, le temps entre deux trajectory_point consécutifs
-            //      => calculer la distance réelle parcouru par le kayak pendant la campagne
-            //      => estimer la distance parcouru sur le référentiel rivière
-            // ==> Cleaning des données réelles
 
 
-            IList<Guid> newCampaignsIds = await RetrieveNewCampaigns(log);
-            CleanKayakRawData(newCampaignsIds); // fais un update sur les trajectory_point du schéma campagne
-            
-            
-            // recup des nouvelles campagnes avec les données intégrées plus d'autres indicateurs : 
-            // distance totale parcouru,
-            // point de départ
-            // point d'arrivée,
-            // durée totale de la campagne,
-            // nb de trash détectés sur la campagne
-            await ComputeOnNewCampaigns(newCampaignsIds);// insere les nouvelles campagnes dans schema BI
+            IDictionary<Guid, string> newCampaignsIds = await RetrieveNewCampaigns(logger);
+            await CleanKayakRawData(logger, newCampaignsIds); // cleans real kayak traces
 
-            ComputeTrashRiver(newCampaignsIds); //Pour chaque Trash on récupère la rivière associée et on projete la geometry du trash sur la rivière
+            await InsertNewCampaignsInBiSchema(newCampaignsIds);//inserts new campaigns into BI db schema
 
-            ComputeTrajectoryPointRiver(newCampaignsIds);
+            await ProjectTrashOnClosestRiver(newCampaignsIds); // projects trash point to closest river point
 
-            ComputeCampaignRiver(newCampaignsIds);// Pour chaque riviere, on calcule la taille de cette riviere, le nb de trash sur cette riviere, la distance parcourue sur cette riviere
+            await ComputeTrajectoryPointRiver(newCampaignsIds);
 
+            await ComputeMetricsOnCampaignRiver(newCampaignsIds);
 
-            CleanErrors(erroredCampaigns); // on vient clean toutes les campagnes pour lesquelles on a eu un probleme de calcul à un moment
+            await CleanErrors(); // on vient clean toutes les campagnes pour lesquelles on a eu un probleme de calcul à un moment
 
-
-
-            var status = await InsertNewCampaignsInBI(newCampaigns, log);
-            if(newCampaignsIds.Count > 0) await InsertLog(startedOn, status, log);
+            var status = await InsertNewCampaignsInBI(newCampaignsIds, logger);
+            if (newCampaignsIds.Count > 0) await InsertLog(startedOn, status, logger);
 
 
         }
 
-        private static void ComputeCampaignRiver(IList<Guid> newCampaignsIds)
+        private static Task CleanErrors()
         {
-             foreach(var newCampaignId in newCampaignsIds){
-                // ************************************ CLEMENT
-                var riverName = "";// une SQL command pour venir chercher le nom de la riviere
-                var resultCode = ExecuteSqlCommand(superCommandeDeClement.sql, riverName);
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// recup des traces GPS du kayak (trajectory_point)
+        ///     On vient calculer la distance, la vitesse, le temps entre deux trajectory_point consécutifs
+        ///      => calculer la distance réelle parcouru par le kayak pendant la campagne
+        ///      => estimer la distance parcouru sur le référentiel rivière
+        /// ==> Cleaning des données réelles
+        /// fais un update sur les trajectory_point du schéma campagne
+        /// </summary>
+        /// <param name="logger"></param>
+        /// <param name="newCampaignsIds"></param>
+        /// <returns></returns>
+        private static async Task CleanKayakRawData(ILogger logger, IDictionary<Guid, string> newCampaignsIds)
+        {
+            // ************************************ CLEMENT
+            var command = "SELECT * FROM campaign.campaign;";
             // ************************************
-
-                if(resultCode == Error){
-                    // DROP de la ligne dans la table Bi Campaign <<<< CLEMENT
-                    // DROP également 
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                conn.Open();
+                using (SqlCommand cmd = new SqlCommand(command, conn))
+                {
+                    cmd.Parameters.AddWithValue("@campaign_id", "1234");
+                    await cmd.ExecuteNonQueryAsync();
                 }
             }
         }
 
-        private static void ComputeTrajectoryPointRiver(IList<Guid> newCampaignsIds)
+        /// <summary>
+        /// Pour chaque riviere, on calcule la taille de cette riviere, le nb de trash sur cette riviere, la distance parcourue sur cette riviere
+        /// </summary>
+        /// <param name="newCampaignsIds"></param>
+        /// <returns></returns>
+        private static async Task ComputeMetricsOnCampaignRiver(IDictionary<Guid, string> newCampaignsIds)
         {
-            foreach(var newCampaignId in newCampaignsIds){
-                // ************************************ CLEMENT
-                var resultCode = ExecuteSqlCommand(ComputeTrajectoryPoint.sql, newCampaignIds);
+             // ************************************ CLEMENT
+            var command = "SELECT * FROM campaign.campaign;";
             // ************************************
-
-                if(resultCode == Error){
-                    // DROP de la ligne dans la table Bi Campaign <<<< CLEMENT
-                    // DROP également 
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                conn.Open();
+                using (SqlCommand cmd = new SqlCommand(command, conn))
+                {
+                    cmd.Parameters.AddWithValue("@campaign_id", "1234");
+                    await cmd.ExecuteNonQueryAsync();
                 }
             }
         }
 
-        private static void ComputeTrashRiver(IList<Guid> newCampaignsIds)
+        private static async Task ComputeTrajectoryPointRiver(IDictionary<Guid, string> newCampaignsIds)
         {
-            foreach(var newCampaignId in newCampaignsIds){
-                // ************************************ CLEMENT
-                var resultCode = ExecuteSqlCommand(ComputeTrashRiver.sql, newCampaignIds);
+            // ************************************ CLEMENT
+            var command = "SELECT * FROM campaign.campaign;";
             // ************************************
-
-                if(resultCode == Error){
-                    // DROP de la ligne dans la table Bi Campaign <<<< CLEMENT
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            {
+                conn.Open();
+                using (SqlCommand cmd = new SqlCommand(command, conn))
+                {
+                    cmd.Parameters.AddWithValue("@campaign_id", "1234");
+                    await cmd.ExecuteNonQueryAsync();
                 }
             }
-
-            // return liste des campagnes 
         }
 
-        private static Task ComputeOnNewCampaigns(IList<Guid> newCampaignsIds)
+        /// <summary>
+        /// Pour chaque Trash on récupère la rivière associée et on projete la geometry du trash sur la rivière
+        /// </summary>
+        /// <param name="newCampaignsIds"></param>
+        /// <returns></returns>
+        private static async Task ProjectTrashOnClosestRiver(IDictionary<Guid, string> newCampaignsIds)
         {
-            // boucle sur l'ensemble des nouvelles campaign
-            foreach(var campaignId in newCampaignsIds){
-                var sqlCommand = "INSERT INTO bi.campaign (id_ref_campaign_fk, start_date, end_date, duration, start_point, end_point, distance_start_end, total_distance, avg_speed, trash_count)
-                var resultCode = executeSqlCommand();
-                if(resultCode == ERROR){
-                    // OSEF
+                // ************************************ CLEMENT
+                var command = "SELECT * FROM campaign.campaign;";
+                // ************************************
+                using (SqlConnection conn = new SqlConnection(ConnectionString))
+                {
+                    conn.Open();
+                    using (SqlCommand cmd = new SqlCommand(command, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@campaign_ids", newCampaignsIds.First().Value);
+                        await cmd.ExecuteNonQueryAsync();
+                    }
                 }
-            }
-
-
-            ComputeDistanceToSea(newCampaignsIds);
-
-            // on peut logger que tout va bien
         }
 
-        private static async Task<OperationStatus> InsertNewCampaignsInBI(IList<Guid> newCampaigns, ILogger log)
+        /// <summary>
+        /// 
+        /// Création des nouvelles campagnes dans le schéma BI, avec les données intégrées plus d'autres indicateurs : 
+        /// distance totale parcouru,
+        /// point de départ
+        /// point d'arrivée,
+        /// durée totale de la campagne,
+        /// nb de trash détectés sur la campagne
+        /// </summary>
+        /// <param name="newCampaignsIds"></param>
+        /// <returns></returns>
+        private static async Task InsertNewCampaignsInBiSchema(IDictionary<Guid, string> newCampaignsIds)
+        {
+             var command = "SELECT * FROM campaign.campaign;";
+                // ************************************
+                using (SqlConnection conn = new SqlConnection(ConnectionString))
+                {
+                    conn.Open();
+                    using (SqlCommand cmd = new SqlCommand(command, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@campaign_ids", newCampaignsIds.First().Value);
+                        await cmd.ExecuteNonQueryAsync();
+                    }
+                }
+
+            await ComputeDistanceToSea(newCampaignsIds);
+        }
+
+        private static async Task ComputeDistanceToSea(IDictionary<Guid, string> newCampaignsIds)
+        {
+            var command = "SELECT * FROM campaign.campaign;";
+                // ************************************
+                using (SqlConnection conn = new SqlConnection(ConnectionString))
+                {
+                    conn.Open();
+                    using (SqlCommand cmd = new SqlCommand(command, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@campaign_ids", newCampaignsIds.First().Value);
+                        await cmd.ExecuteNonQueryAsync();
+                    }
+                }
+        }
+
+        private static async Task<OperationStatus> InsertNewCampaignsInBI(IDictionary<Guid, string> newCampaigns, ILogger log)
         {
             using (SqlConnection conn = new SqlConnection(ConnectionString))
             {
                 conn.Open();
-                foreach(var campaignId in newCampaigns){
+                foreach (var campaignId in newCampaigns)
+                {
                     var command = $"INSERT INTO bi.Campaign (Id) VALUES ('{campaignId}')";
                     using (SqlCommand cmd = new SqlCommand(command, conn))
                     {
@@ -155,9 +217,10 @@ namespace Surfrider.Jobs.Recurring
             }
         }
 
-        private static async Task<IList<Guid>> RetrieveNewCampaigns(ILogger log)
+        private static async Task<IDictionary<Guid, string>> RetrieveNewCampaigns(ILogger log)
         {
-            IList<Guid> campaigns = new List<Guid>();
+                
+            IDictionary<Guid, string> campaigns = new Dictionary<Guid, string>();
             var campaignToInsertCommand = "SELECT cam.Id FROM dbo.Campaign cam LEFT JOIN bi.Campaign cbi ON cam.Id = cbi.Id WHERE cbi.Id IS NULL";
             using (SqlConnection conn = new SqlConnection(ConnectionString))
             {
@@ -168,7 +231,7 @@ namespace Surfrider.Jobs.Recurring
                     {
                         while (reader.Read())
                         {
-                            campaigns.Add(reader.GetGuid(0));
+                            campaigns.Add(reader.GetGuid(0), "river_name");
                             log.LogInformation($"{reader.GetGuid(0).ToString()} id retrieved");
                         }
                     }
