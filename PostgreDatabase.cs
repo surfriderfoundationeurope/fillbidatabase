@@ -16,7 +16,7 @@ namespace Surfrider
 
         public async Task<int> ExecuteNonQuery(string query, IDictionary<string, object> args = null)
         {
-            using (var conn = new NpgsqlConnection("postgre_connection"))
+            using (var conn = new NpgsqlConnection(ConnectionString))
             {
                 conn.Open();
                 using (var cmd = new NpgsqlCommand())
@@ -34,7 +34,7 @@ namespace Surfrider
         public async Task<string> ExecuteStringQuery(string query, IDictionary<string, object> args = null)
         {
             string res = string.Empty;
-            using (var conn = new NpgsqlConnection("postgre_connection"))
+            using (var conn = new NpgsqlConnection(ConnectionString))
             {
                 conn.Open();
                 using (var cmd = new NpgsqlCommand())

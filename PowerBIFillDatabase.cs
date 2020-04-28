@@ -12,7 +12,6 @@ namespace Surfrider.Jobs.Recurring
 {
     public static class PowerBIFillDatabase
     {
-        public static string ConnectionString = Environment.GetEnvironmentVariable("sqldb_connection");
         public static IDatabase Database;
         [FunctionName("PowerBIFillDatabase")]
         public static async Task Run([TimerTrigger("*/20 * * * * *")]TimerInfo myTimer, ILogger logger)
@@ -23,11 +22,8 @@ namespace Surfrider.Jobs.Recurring
             // ** ComputeMetricsOnCampaignRiver()
             // ** ComputeTrajectoryPointRiver()
             // * Log les campaign pour lesquelles on a des erreur de calcul quelque part
-            // * Delete la connectionString vers la BD SQL
 
             var startedOn = DateTime.Now;
-
-   // ,"postgre_connection": "Host=127.0.0.1;Port=5432;Username=postgres;Password=postgres;Database=postgres"
 
             IDictionary<Guid, string> newCampaignsIds = await RetrieveNewCampaigns(logger);
             await CleanKayakRawData(logger, newCampaignsIds); // cleans real kayak traces
