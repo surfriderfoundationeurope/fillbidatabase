@@ -44,9 +44,9 @@ namespace Surfrider.Jobs.Recurring
 
         }
 
-        private static Task CleanErrors()
+        private static async Task CleanErrors()
         {
-            throw new NotImplementedException();
+           //
         }
 
         /// <summary>
