@@ -9,9 +9,9 @@ namespace Surfrider
     public class PostgreDatabase : IDatabase
     {
         string ConnectionString;
-        public PostgreDatabase(string connectionStringName)
+        public PostgreDatabase(string connectionString)
         {
-            this.ConnectionString = Environment.GetEnvironmentVariable(connectionStringName);
+            this.ConnectionString = connectionString;
         }
 
         public async Task<int> ExecuteNonQuery(string query, IDictionary<string, object> args = null)

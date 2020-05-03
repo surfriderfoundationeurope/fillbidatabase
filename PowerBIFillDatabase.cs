@@ -41,6 +41,7 @@ namespace Surfrider.Jobs.Recurring
             // var status = await InsertNewCampaignsInBI(newCampaignsIds, logger);
             // if (newCampaignsIds.Count > 0) await InsertLog(startedOn, status, logger);
 
+            Console.WriteLine("-------------------- ALL DONE ---------------------");
 
         }
 
@@ -174,11 +175,11 @@ namespace Surfrider.Jobs.Recurring
 
             IDictionary<Guid, string> campaigns = new Dictionary<Guid, string>();
             // ************************************ CLEMENT
-            var command = "SELECT cam.Id FROM dbo.Campaign cam LEFT JOIN bi.Campaign cbi ON cam.Id = cbi.Id WHERE cbi.Id IS NULL";
+            var command = "SELECT * FROM campaign.campaign";
             // ************************************
             IDictionary<string, object> args = new Dictionary<string, object>();
             args.Add("@campaign_id", "1234");
-            await Database.ExecuteStringQuery(command, args);
+            await Database.ExecuteNonQuery(command, args);
             return campaigns;
         }
 
