@@ -10,11 +10,10 @@ namespace Surfrider.Jobs.Recurring
 {
     public static class PowerBIFillDatabase
     {
-        public static string ConnectionString = Environment.GetEnvironmentVariable("sqldb_connection");
         [FunctionName("PowerBIFillDatabase")]
-        public static async Task Run([TimerTrigger("0 0 * * * *")]TimerInfo myTimer, ILogger log)
+        public static async Task Run([TimerTrigger("0/10 * * * * *")]TimerInfo myTimer, ILogger log)
         {
-
+            Console.WriteLine(Helper.GetConnectionString());
             // TODO 
             // DONE - faire la bonne query sql pour update
             // DONE - tester en local
@@ -23,15 +22,15 @@ namespace Surfrider.Jobs.Recurring
             // DONE - save le code sur github
             // faire les différents calculs
             
-            var startedOn = DateTime.Now;
-            var newCampaigns = await RetrieveNewCampaigns(log);
-            var status = await InsertNewCampaignsInBI(newCampaigns, log);
-            if(newCampaigns.Count > 0) await InsertLog(startedOn, status, log);
+            // var startedOn = DateTime.Now;
+            // var newCampaigns = await RetrieveNewCampaigns(log);
+            // var status = await InsertNewCampaignsInBI(newCampaigns, log);
+            // if(newCampaigns.Count > 0) await InsertLog(startedOn, status, log);
         }
 
         private static async Task<OperationStatus> InsertNewCampaignsInBI(IList<Guid> newCampaigns, ILogger log)
         {
-            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            using (SqlConnection conn = new SqlConnection())
             {
                 conn.Open();
                 foreach(var campaignId in newCampaigns){
@@ -52,7 +51,7 @@ namespace Surfrider.Jobs.Recurring
             var elapsedTime = finishedOn - startedOn;
             // see https://stackoverflow.com/a/23163325/12805412 
             var command = $"INSERT INTO bi.Logs VALUES (@id, @startedOn, @finishedOn, @elapsedTime, @status)";
-            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            using (SqlConnection conn = new SqlConnection())
             {
                 conn.Open();
                 using (SqlCommand cmd = new SqlCommand(command, conn))
@@ -72,7 +71,7 @@ namespace Surfrider.Jobs.Recurring
         {
             IList<Guid> campaigns = new List<Guid>();
             var campaignToInsertCommand = "SELECT cam.Id FROM dbo.Campaign cam LEFT JOIN bi.Campaign cbi ON cam.Id = cbi.Id WHERE cbi.Id IS NULL";
-            using (SqlConnection conn = new SqlConnection(ConnectionString))
+            using (SqlConnection conn = new SqlConnection())
             {
                 conn.Open();
                 using (SqlCommand cmd = new SqlCommand(campaignToInsertCommand, conn))
