@@ -1,5 +1,6 @@
-# fillbidatabase
+# Fill Bi Database
 Code for the recurring job that fills Bi database schema.
+This function runs **every day at 00:00**
 
 # Test it
 This project is easy to test w/ VSCode and a local installation of Node.js (https://nodejs.org/en/).

@@ -14,7 +14,7 @@ namespace Surfrider.Jobs.Recurring
     {
         public static IDatabase Database;
         [FunctionName("PowerBIFillDatabase")]
-        public static async Task Run([TimerTrigger("*/20 * * * * *")]TimerInfo myTimer, ILogger logger)
+        public static async Task Run([TimerTrigger("0 0 0 * * *")]TimerInfo myTimer, ILogger logger)// runs everyd ay at 00:00
         {
             Database = new PostgreDatabase(Helper.GetConnectionString());
             // TODO
