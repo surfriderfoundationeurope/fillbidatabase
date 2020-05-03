@@ -16,7 +16,7 @@ namespace Surfrider.Jobs.Recurring
         [FunctionName("PowerBIFillDatabase")]
         public static async Task Run([TimerTrigger("*/20 * * * * *")]TimerInfo myTimer, ILogger logger)
         {
-            Database = new PostgreDatabase("postgre_connection");
+            Database = new PostgreDatabase(Helper.GetConnectionString());
             // TODO
             // * DROP les campaign pour lesquels on a une erreur de calcul quelque part
             // ** ComputeMetricsOnCampaignRiver()
