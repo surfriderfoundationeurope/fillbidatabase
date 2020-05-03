@@ -12,3 +12,6 @@ After extensions installed, please check your local environement can run azure f
 the installed version is displayed.
 
 To test the project, go to Debug section, then click on Run.
+
+# Useful links
+Application settings reference for Azure Functions : https://docs.microsoft.com/en-us/azure/azure-functions/functions-app-settings 
