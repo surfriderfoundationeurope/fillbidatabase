@@ -2,7 +2,17 @@
 Code for the recurring job that fills Bi database schema.
 This function runs **every day at 00:00**
 
+# Principles
+Several ordered SQL request will be executed on the server in order to compute BI data.
+
+![image-20200505161802892](/_images/image-20200505161802892.png)
+
+*In red the steps we think will take time. In grey, the optionnal step we will do in a second time.*
+
+
+
 # Test it
+
 This project is easy to test w/ VSCode and a local installation of Node.js (https://nodejs.org/en/).
 In order to test and run the project locally, you need to install the following VSCode extensions : 
 * C# extension https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.csharp
