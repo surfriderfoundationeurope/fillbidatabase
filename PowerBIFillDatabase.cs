@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Data.Common;
 using System.Collections;
+using Npgsql;
 
 namespace Surfrider.Jobs.Recurring
 {
@@ -14,9 +15,10 @@ namespace Surfrider.Jobs.Recurring
     {
         public static IDatabase Database;
         [FunctionName("PowerBIFillDatabase")]
-        public static async Task Run([TimerTrigger("0 0 0 * * *")]TimerInfo myTimer, ILogger logger)// runs everyd ay at 00:00
+        public static async Task Run([TimerTrigger("0/10 * * * * *")]TimerInfo myTimer, ILogger logger)// runs everyd ay at 00:00
         {
             Database = new PostgreDatabase(Helper.GetConnectionString());
+            Console.WriteLine("USING " + Helper.GetConnectionString());
             // TODO
             // * DROP les campaign pour lesquels on a une erreur de calcul quelque part
             // ** ComputeMetricsOnCampaignRiver()
@@ -25,8 +27,10 @@ namespace Surfrider.Jobs.Recurring
 
             var startedOn = DateTime.Now;
 
-            IDictionary<Guid, string> newCampaignsIds = await RetrieveNewCampaigns(logger);
-            await CleanKayakRawData(logger, newCampaignsIds); // cleans real kayak traces
+            IList<Guid> newCampaignsIds = await RetrieveNewCampaigns(logger);
+            var requestGuids = FormatGuidsForSQL(newCampaignsIds);
+
+            await CleanKayakRawData(logger, requestGuids); // cleans real kayak traces
 
             await InsertNewCampaignsInBiSchema(newCampaignsIds);//inserts new campaigns into BI db schema
 
@@ -45,6 +49,18 @@ namespace Surfrider.Jobs.Recurring
 
         }
 
+        private static string FormatGuidsForSQL(IList<Guid> newCampaignsIds)
+        {
+            var res = "";
+            for(int i = 0; i < newCampaignsIds.Count; i++){
+                
+                res += "'" + newCampaignsIds[i] + "'";
+                if(i < newCampaignsIds.Count - 1)
+                    res += ",";
+            }
+            return res;
+        }
+
         private static async Task CleanErrors()
         {
            //
@@ -61,13 +77,19 @@ namespace Surfrider.Jobs.Recurring
         /// <param name="logger"></param>
         /// <param name="newCampaignsIds"></param>
         /// <returns></returns>
-        private static async Task CleanKayakRawData(ILogger logger, IDictionary<Guid, string> newCampaignsIds)
+        private static async Task CleanKayakRawData(ILogger logger, string newCampaignsIds)
         {
             // ************************************ CLEMENT
-            var command = "SELECT * FROM campaign.campaign;";
+            var command = $"DO $$ DECLARE campaign_ids uuid[] := ARRAY[{newCampaignsIds}];";
+            command += " BEGIN UPDATE bi.trajectory_point";
+            command += " SET speed = (distance/EXTRACT(epoch FROM time_diff))*3.6";
+            command += " WHERE speed IS NULL";
+            command += " AND EXTRACT(epoch FROM time_diff) > 0";
+            command += " AND distance > 0";
+            command += " AND id_ref_campaign_fk IN (SELECT UNNEST(campaign_ids));END $$;";
+
             // ************************************
             IDictionary<string, object> args = new Dictionary<string, object>();
-            args.Add("@campaign_id", "1234");
             await Database.ExecuteNonQuery(command, args);
         }
 
@@ -76,7 +98,7 @@ namespace Surfrider.Jobs.Recurring
         /// </summary>
         /// <param name="newCampaignsIds"></param>
         /// <returns></returns>
-        private static async Task ComputeMetricsOnCampaignRiver(IDictionary<Guid, string> newCampaignsIds)
+        private static async Task ComputeMetricsOnCampaignRiver(IList<Guid> newCampaignsIds)
         {
             // ************************************ CLEMENT
             var command = "SELECT * FROM campaign.campaign;";
@@ -86,7 +108,7 @@ namespace Surfrider.Jobs.Recurring
             await Database.ExecuteNonQuery(command, args);
         }
 
-        private static async Task ComputeTrajectoryPointRiver(IDictionary<Guid, string> newCampaignsIds)
+        private static async Task ComputeTrajectoryPointRiver(IList<Guid> newCampaignsIds)
         {
             // ************************************ CLEMENT
             var command = "SELECT * FROM campaign.campaign;";
@@ -101,7 +123,7 @@ namespace Surfrider.Jobs.Recurring
         /// </summary>
         /// <param name="newCampaignsIds"></param>
         /// <returns></returns>
-        private static async Task ProjectTrashOnClosestRiver(IDictionary<Guid, string> newCampaignsIds)
+        private static async Task ProjectTrashOnClosestRiver(IList<Guid> newCampaignsIds)
         {
             // ************************************ CLEMENT
             var command = "SELECT * FROM campaign.campaign;";
@@ -122,7 +144,7 @@ namespace Surfrider.Jobs.Recurring
         /// </summary>
         /// <param name="newCampaignsIds"></param>
         /// <returns></returns>
-        private static async Task InsertNewCampaignsInBiSchema(IDictionary<Guid, string> newCampaignsIds)
+        private static async Task InsertNewCampaignsInBiSchema(IList<Guid> newCampaignsIds)
         {
             // ************************************ CLEMENT
             var command = "SELECT * FROM campaign.campaign;";
@@ -134,7 +156,7 @@ namespace Surfrider.Jobs.Recurring
             await ComputeDistanceToSea(newCampaignsIds);
         }
 
-        private static async Task ComputeDistanceToSea(IDictionary<Guid, string> newCampaignsIds)
+        private static async Task ComputeDistanceToSea(IList<Guid> newCampaignsIds)
         {
             // ************************************ CLEMENT
             var command = "SELECT * FROM campaign.campaign;";
@@ -144,7 +166,7 @@ namespace Surfrider.Jobs.Recurring
             await Database.ExecuteNonQuery(command, args);
         }
 
-        private static async Task<OperationStatus> InsertNewCampaignsInBI(IDictionary<Guid, string> newCampaigns, ILogger log)
+        private static async Task<OperationStatus> InsertNewCampaignsInBI(IList<Guid> newCampaigns, ILogger log)
         {
             // ************************************ CLEMENT
             var command = "SELECT * FROM campaign.campaign;";
@@ -170,16 +192,36 @@ namespace Surfrider.Jobs.Recurring
             await Database.ExecuteNonQuery(command, args);
         }
 
-        private static async Task<IDictionary<Guid, string>> RetrieveNewCampaigns(ILogger log)
+        private static async Task<IList<Guid>> RetrieveNewCampaigns(ILogger log)
         {
 
-            IDictionary<Guid, string> campaigns = new Dictionary<Guid, string>();
-            // ************************************ CLEMENT
-            var command = "SELECT * FROM campaign.campaign";
+            IList<Guid> campaigns = new List<Guid>();
+            var current_ts = new DateTime(2020, 05, 04);
+            var command = $"SELECT id FROM campaign.campaign WHERE createdon >=  '{current_ts}'";
             // ************************************
-            IDictionary<string, object> args = new Dictionary<string, object>();
-            args.Add("@campaign_id", "1234");
-            await Database.ExecuteNonQuery(command, args);
+            // IDictionary<string, object> args = new Dictionary<string, object>();
+            // args.Add("@current_ts", new DateTime(2020, 05, 04));
+            // SQL PART
+            string res = string.Empty;
+            using (var conn = new NpgsqlConnection(Helper.GetConnectionString()))
+                {
+                    conn.Open();
+                    using (var cmd = new NpgsqlCommand())
+                    {
+                        cmd.Connection = conn;
+                        cmd.CommandText = command;
+                        using (var reader = await cmd.ExecuteReaderAsync())
+                        {
+                            
+                            while (reader.Read())
+                            {
+                                campaigns.Add(reader.GetFieldValue<Guid>(0));
+                            }
+                            
+                        }
+                    }
+                }
+                
             return campaigns;
         }
 
