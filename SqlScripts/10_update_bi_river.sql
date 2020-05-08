@@ -25,8 +25,7 @@ BEGIN
 
     UPDATE bi.river
     SET count_trash  = t.count_trash,
-      trash_per_km = t.count_trash/(distance_monitored/1000)
-
+        trash_per_km = t.count_trash/(NULLIF(distance_monitored,0)/1000)
     FROM
     (
       SELECT
