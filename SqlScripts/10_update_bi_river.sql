@@ -10,7 +10,7 @@ BEGIN
       (
       SELECT
         r.river_name,
-        st_union(st_buffer(r.the_geom, 0.1)) the_geom_monitored
+        st_union(st_buffer(r.the_geom, 0.01)) the_geom_monitored
       FROM
         bi.campaign_river r
 
@@ -31,7 +31,7 @@ BEGIN
     (
       SELECT
         tr.river_name,
-        count(distinct(id)) count_trash
+        count(distinct(tr.id_ref_trash_fk)) count_trash
       FROM
         bi.trash_river tr
 
