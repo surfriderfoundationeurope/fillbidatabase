@@ -1,8 +1,6 @@
-DROP FUNCTION IF EXISTS bi.insert_bi_trajectory_point_river(uuid[]);
+DO $$
 
-CREATE OR REPLACE FUNCTION bi.insert_bi_trajectory_point_river(campaigns_uuids uuid[])
-RETURNS BOOLEAN AS $$
-
+DECLARE campaign_ids uuid[] := ARRAY[@campaign_ids];
 BEGIN
 
       INSERT INTO bi.trajectory_point_river (
@@ -33,10 +31,10 @@ BEGIN
         closest_r.name river_name,
         closest_r.importance
 
-      from
-        (SELECT * FROM campaign.trajectory_point WHERE id_ref_campaign_fk IN (SELECT UNNEST(campaign_id)) t
+      FROM
+          campaign.trajectory_point t
 
-      inner join lateral (
+      INNER JOIN LATERAL (
 
                           SELECT
                           *
@@ -50,7 +48,11 @@ BEGIN
 
                           ) closest_r ON TRUE
 
+
+      WHERE t.id_ref_campaign_fk IN (SELECT UNNEST(campaign_ids))
+
       )
+
       SELECT
         id_ref_trajectory_point_fk,
         id_ref_campaign_fk,
@@ -66,13 +68,9 @@ BEGIN
       FROM
         subquery_1;
 
-RETURN TRUE;
-END;
+      DROP INDEX IF EXISTS bi.trajectory_point_river_id_ref_trajectory_point_fk;
+      CREATE INDEX trajectory_point_river_id_ref_trajectory_point_fk ON bi.trajectory_point_river (id_ref_trajectory_point_fk);
 
-$$ LANGUAGE plpgsql;
-
-
-SELECT * FROM bi.insert_bi_trajectory_point_river(campaigns_uuids=>ARRAY[uuid1, uuid2, uuid3]);
-
+END$$;
 
 

@@ -1,13 +1,20 @@
-DROP FUNCTION IF EXISTS bi.insert_bi_campaign(uuid[]);
+DO $$
 
-CREATE OR REPLACE FUNCTION bi.insert_bi_campaign(campaigns_uuids uuid[])
-RETURNS BOOLEAN AS $$
+DECLARE campaign_ids uuid[] := ARRAY[@campaign_ids];
 
 BEGIN
 
     INSERT INTO bi.campaign (
 
                               id_ref_campaign_fk,
+ 							  locomotion,
+							  isaidriven,
+							  remark,
+							  id_ref_user_fk,
+							  riverside,
+							  container_url,
+							  blob_name,
+							  id_ref_model_fk,
                               start_date,
                               end_date,
                               duration,
@@ -16,7 +23,8 @@ BEGIN
                               distance_start_end,
                               total_distance,
                               avg_speed,
-                              trash_count
+                              trash_count,
+							  createdon
 
                               )
 SELECT
@@ -43,7 +51,7 @@ SELECT
         current_timestamp
 
 
-    FROM (SELECT * FROM campaign.campaign limit 100) c
+    FROM campaign.campaign c
 
     LEFT JOIN (
 
@@ -56,8 +64,10 @@ SELECT
               GROUP BY id_ref_campaign_fk
 
                 ) point ON point.id_ref_campaign_fk = c.id
+
     LEFT JOIN campaign.trajectory_point start_geom ON start_geom.id_ref_campaign_fk = c.id AND start_geom.time = point.min_time
     LEFT JOIN campaign.trajectory_point end_geom   ON end_geom.id_ref_campaign_fk = c.id AND end_geom.time = point.max_time
+
     LEFT JOIN  (
 
               SELECT
@@ -79,7 +89,11 @@ SELECT
                 FROM campaign.trash
                 GROUP BY id_ref_campaign_fk
 
-               ) trash_n ON trash_n.id_ref_campaign_fk = c.id;
+               ) trash_n ON trash_n.id_ref_campaign_fk = c.id
+
+
+    WHERE c.id in (select unnest(campaign_ids))
+    ;
 
     DROP INDEX IF EXISTS bi.campaign_id_ref_campaign_fk;
     CREATE INDEX campaign_id_ref_campaign_fk on bi.campaign (id_ref_campaign_fk);
@@ -89,15 +103,10 @@ SELECT
 
     DROP INDEX IF EXISTS bi.campaign_end_point;
     CREATE INDEX campaign_end_point on bi.campaign using gist(end_point);
-     ;
 
-RETURN TRUE;
-END;
-
-$$ LANGUAGE plpgsql;
+END$$;
 
 
-SELECT * FROM bi.insert_bi_campaign(campaigns_uuids=>ARRAY[uuid1, uuid2, uuid3]);
 
 
 

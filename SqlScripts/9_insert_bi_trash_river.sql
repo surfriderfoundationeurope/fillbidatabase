@@ -1,8 +1,6 @@
-DROP FUNCTION IF EXISTS bi.insert_bi_trash_river(uuid[]);
+DO $$
 
-CREATE OR REPLACE FUNCTION bi.insert_bi_trash_river(campaigns_uuids uuid[])
-RETURNS BOOLEAN AS $$
-
+DECLARE campaign_ids uuid[] := ARRAY[@campaign_ids];
 BEGIN
 
       INSERT INTO bi.trash_river (
@@ -22,18 +20,18 @@ BEGIN
                                   )
       WITH subquery_1 AS (
 
-      SELECT
-        t.id id_ref_trash_fk,
-        t.id_ref_campaign_fk id_ref_campaign_fk,
-        closest_r.id id_ref_river_fk,
-        t.the_geom trash_the_geom,
-        closest_r.the_geom river_the_geom,
-        st_closestpoint(closest_r.the_geom, t.the_geom) closest_point_the_geom,
-        closest_r.importance,
-        closest_r.name river_name
+        SELECT
+          t.id id_ref_trash_fk,
+          t.id_ref_campaign_fk id_ref_campaign_fk,
+          closest_r.id id_ref_river_fk,
+          t.the_geom trash_the_geom,
+          closest_r.the_geom river_the_geom,
+          st_closestpoint(closest_r.the_geom, t.the_geom) closest_point_the_geom,
+          closest_r.importance,
+          closest_r.name river_name
 
       FROM
-        (SELECT * FROM campaign.trah WHERE id_ref_campaign_fk IN (SELECT UNNEST(campaign_id)) t
+        campaign.trash  t
 
       INNER JOIN LATERAL (
 
@@ -47,7 +45,9 @@ BEGIN
         LIMIT 1
         ) closest_r ON TRUE
 
+      WHERE t.id_ref_campaign_fk IN (SELECT UNNEST(campaign_ids))
       )
+
       SELECT
         id_ref_trash_fk,
         id_ref_campaign_fk,
@@ -63,16 +63,7 @@ BEGIN
       FROM
         subquery_1;
 
-      DROP INDEX IF EXISTS bi_trash_river_closest_point_the_geom;
-      CREATE INDEX bi_trash_river_closest_point_the_geom on bi.trash_river using gist(closest_point_the_geom);
+      DROP INDEX IF EXISTS bi.trash_river_closest_point_the_geom;
+      CREATE INDEX trash_river_closest_point_the_geom on bi.trash_river using gist(closest_point_the_geom);
 
-RETURN TRUE;
-END;
-
-$$ LANGUAGE plpgsql;
-
-
-SELECT * FROM bi.insert_bi_trash_river(campaigns_uuids=>ARRAY[uuid1, uuid2, uuid3]);
-
-
-
+END$$;
