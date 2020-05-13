@@ -31,7 +31,7 @@ BEGIN
           closest_r.name river_name
 
       FROM
-        campaign.trash  t
+        bi.trash  t
 
       INNER JOIN LATERAL (
 
