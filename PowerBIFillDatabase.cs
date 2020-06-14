@@ -10,17 +10,27 @@ namespace Surfrider.Jobs.Recurring
     public static class PowerBIFillDatabase
     {
         public static IDatabase Database;
+        public static string ScriptVersion = "0.3";
         private static string ListOfCampaignsIds;
         [FunctionName("PowerBIFillDatabase")]
         public static async Task Run([TimerTrigger("0 0 2 * * *")]TimerInfo myTimer, ILogger logger)// runs everyd ay at 02:00
         {
             Console.WriteLine("USING " + Helper.GetConnectionString());
             Database = new PostgreDatabase(Helper.GetConnectionString());
+
             // TODO
-            // * DROP les campaign pour lesquels on a une erreur de calcul quelque part
-            // ** ComputeMetricsOnCampaignRiver()
-            // ** ComputeTrajectoryPointRiver()
-            // * Log les campaign pour lesquelles on a des erreur de calcul quelque part
+            // 0. Faire les modif sur le schéma campaign
+            // 0.1 Créer une bd de prod avec juste campaign.campaign, campaign.user, campign.media et le schéma label
+            // 1. Faire un mecanisme de retry ou de log d'erreur
+            // 2. Log les campaign pour lesquelles on a des erreur de calcul quelque part
+            // ==> comme on va faire des batch de campaign, ça sera le batch qui serra en erreur
+            // ==> si erreur, on vient pas mettre à jour le status de la campaign dans logs.bi. Par contre, on
+            // vient mettre à jour le finished_on, reason et failed_step.
+            // >>>> Changer le nom du champs script_version en pipeline_version.
+
+            // 3. Clément : voir si on peut déporter en C# certains calculs
+            // 3.1 mettre numéro avec chaque boite du schéma
+            // 3.2 Faire un Excel avec chaque boite et une colonne pour dire OUI/NON c'est déportable, et détailler les I/O pour chaque truc.
 
             var startedOn = DateTime.Now;
 
@@ -43,9 +53,6 @@ namespace Surfrider.Jobs.Recurring
             await ExecuteScript(@"./SqlScripts/10_update_bi_river.sql");
 
             // await CleanErrors(); // on vient clean toutes les campagnes pour lesquelles on a eu un probleme de calcul à un moment
-
-            // var status = await InsertNewCampaignsInBI(newCampaignsIds, logger);
-            // if (newCampaignsIds.Count > 0) await InsertLog(startedOn, status, logger);
 
             Console.WriteLine("-------------------- ALL DONE ---------------------");
 
