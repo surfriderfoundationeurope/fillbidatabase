@@ -41,16 +41,26 @@ namespace Surfrider.Jobs.Recurring
             newCampaignsIds.Add(new Guid("2155da04-c2bb-433b-9a90-8ec8b8d74ee9"));
             // *************************************************************************
             ListOfCampaignsIds = FormatGuidsForSQL(newCampaignsIds);
-
+            PipelineStatus.Status = OperationStatus.OK;
+            PipelineStatus.Reason = string.Empty;
+            
             await ExecuteScript(@"./SqlScripts/2_update_campaign_trajectory_point.sql");
-            await ExecuteScript(@"./SqlScripts/3_insert_bi_campaign.sql");//inserts new campaigns into BI db schema
-            await ExecuteScript(@"./SqlScripts/4_insert_bi_campaign_distance_to_sea.sql");
-            await ExecuteScript(@"./SqlScripts/5_insert_bi_trajectory_point_river.sql"); //Pour chaque Trash on récupère la rivière associée et on projete la geometry du trash sur la rivière
-            await ExecuteScript(@"./SqlScripts/6_insert_bi_campaign_river.sql");
-            await ExecuteScript(@"./SqlScripts/7_get_bi_rivers_id.sql");
-            await ExecuteScript(@"./SqlScripts/8_update_bi_trash.sql");
-            await ExecuteScript(@"./SqlScripts/9_insert_bi_trash_river.sql");
-            await ExecuteScript(@"./SqlScripts/10_update_bi_river.sql");
+            if(PipelineStatus.Status == OperationStatus.OK)
+             await ExecuteScript(@"./SqlScripts/3_insert_bi_campaign.sql");//inserts new campaigns into BI db schema
+            if(PipelineStatus.Status == OperationStatus.OK)
+           await ExecuteScript(@"./SqlScripts/4_insert_bi_campaign_distance_to_sea.sql");
+            if(PipelineStatus.Status == OperationStatus.OK)
+           await ExecuteScript(@"./SqlScripts/5_insert_bi_trajectory_point_river.sql"); //Pour chaque Trash on récupère la rivière associée et on projete la geometry du trash sur la rivière
+            if(PipelineStatus.Status == OperationStatus.OK)
+           await ExecuteScript(@"./SqlScripts/6_insert_bi_campaign_river.sql");
+            if(PipelineStatus.Status == OperationStatus.OK)
+           await ExecuteScript(@"./SqlScripts/7_get_bi_rivers_id.sql");
+            if(PipelineStatus.Status == OperationStatus.OK)
+           await ExecuteScript(@"./SqlScripts/8_update_bi_trash.sql");
+            if(PipelineStatus.Status == OperationStatus.OK)
+           await ExecuteScript(@"./SqlScripts/9_insert_bi_trash_river.sql");
+            if(PipelineStatus.Status == OperationStatus.OK)
+           await ExecuteScript(@"./SqlScripts/10_update_bi_river.sql");
 
             // await CleanErrors(); // on vient clean toutes les campagnes pour lesquelles on a eu un probleme de calcul à un moment
 
@@ -76,9 +86,27 @@ namespace Surfrider.Jobs.Recurring
         }
 
         private static async Task ExecuteScript(string scriptPath){
-            var command = System.IO.File.ReadAllText(scriptPath);
-            command = command.Replace("@campaign_ids", ListOfCampaignsIds);
-            await Database.ExecuteNonQuery(command);
+            string command = string.Empty;
+            try {
+                command = System.IO.File.ReadAllText(scriptPath);
+            }catch(Exception e){
+                Console.WriteLine($"-------------- ERROR READING SQL FILE {scriptPath}");
+                 PipelineStatus.Status = OperationStatus.ERROR;
+                 PipelineStatus.Reason = e.ToString();
+            }
+            if(command != string.Empty){
+                try {
+
+                command = command.Replace("@campaign_ids", ListOfCampaignsIds);
+                await Database.ExecuteNonQuery(command);
+                }catch(Exception e){
+                    Console.WriteLine($"-------------- ERROR DURING SQL FILE EXECUTION {scriptPath}");
+                    PipelineStatus.Status = OperationStatus.ERROR;
+                    PipelineStatus.Reason = e.ToString();
+                }
+            }
+           PipelineStatus.Status = OperationStatus.OK;
+
         }
 
         private static async Task InsertLog(DateTime startedOn, OperationStatus status, ILogger log)
