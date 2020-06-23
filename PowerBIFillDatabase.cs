@@ -4,6 +4,8 @@ using Microsoft.Extensions.Logging;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using Npgsql;
+using System.IO;
+using Azure.Storage.Blobs;
 
 namespace Surfrider.Jobs.Recurring
 {
@@ -152,7 +154,33 @@ namespace Surfrider.Jobs.Recurring
             return campaigns;
         }
 
+        private static async Task CreateNewFileAsync(){
+            // Create a BlobServiceClient object which will be used to create a container client
+            BlobServiceClient blobServiceClient = new BlobServiceClient(Helper.GetBlobStorageConnectionString());
 
+            //Create a unique name for the container
+            string containerName = "public";
+
+            // Create the container and return a container client object
+            BlobContainerClient containerClient = await blobServiceClient.CreateBlobContainerAsync(containerName);
+            // Create a local file in the ./data/ directory for uploading and downloading
+            string localPath = "./data/";
+            string fileName = "data_home_page.json";
+            string localFilePath = Path.Combine(localPath, fileName);
+
+            // Write text to the file
+            await File.WriteAllTextAsync(localFilePath, @"{contributors: 10, coveredKm: 500, trashPerKm: 80}");
+
+            // Get a reference to a blob
+            BlobClient blobClient = containerClient.GetBlobClient(fileName);
+
+            Console.WriteLine("Uploading to Blob storage as blob:\n\t {0}\n", blobClient.Uri);
+
+            // Open the file and upload its data
+            using FileStream uploadFileStream = File.OpenRead(localFilePath);
+            await blobClient.UploadAsync(uploadFileStream, true);
+            uploadFileStream.Close();
+        }
     }
 
 }
