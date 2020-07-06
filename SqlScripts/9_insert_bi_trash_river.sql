@@ -3,7 +3,7 @@ DO $$
 DECLARE campaign_ids uuid[] := ARRAY[@campaign_ids];
 BEGIN
 
-      INSERT INTO bi.trash_river (
+      INSERT INTO bi_temp.trash_river (
 
                                   id_ref_trash_fk,
                                   id_ref_campaign_fk,
@@ -31,7 +31,7 @@ BEGIN
           closest_r.name river_name
 
       FROM
-        bi.trash  t
+        bi_temp.trash  t
 
       INNER JOIN LATERAL (
 
@@ -41,7 +41,7 @@ BEGIN
         referential.river r
         WHERE name IS NOT NULL
 
-        ORDER BY r.the_geom <-> t.the_geom
+        ORDER BY bi_temp.the_geom <-> t.the_geom
         LIMIT 1
         ) closest_r ON TRUE
 

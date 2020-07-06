@@ -3,7 +3,7 @@ DO $$
 DECLARE campaign_ids uuid[] := ARRAY[@campaign_ids];
 BEGIN
 
-INSERT INTO bi.campaign_river (
+INSERT INTO bi_temp.campaign_river (
 
 								id_ref_campaign_fk,
 								the_geom,
@@ -22,7 +22,7 @@ WITH subquery_1 as (
 		st_union(river_the_geom) river_the_geom
 
 	FROM
-		bi.trajectory_point_river  tr
+		bi_temp.trajectory_point_river  tr
 
 	INNER JOIN campaign.trajectory_point t on t.id = tr.id_ref_trajectory_point_fk
 	WHERE tr.id_ref_campaign_fk in (select unnest(campaign_ids))

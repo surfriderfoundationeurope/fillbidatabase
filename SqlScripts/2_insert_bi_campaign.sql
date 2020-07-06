@@ -4,17 +4,15 @@ DECLARE campaign_ids uuid[] := ARRAY[@campaign_ids];
 
 BEGIN
 
-    INSERT INTO bi.campaign (
+    INSERT INTO bi_temp.campaign (
 
                               id_ref_campaign_fk,
- 							  locomotion,
-							  isaidriven,
-							  remark,
-							  id_ref_user_fk,
-							  riverside,
-							  container_url,
-							  blob_name,
-							  id_ref_model_fk,
+                              locomotion,
+                              isaidriven,
+							                remark,
+							                id_ref_user_fk,
+							                riverside,
+							                id_ref_model_fk,
                               start_date,
                               end_date,
                               duration,
@@ -24,7 +22,7 @@ BEGIN
                               total_distance,
                               avg_speed,
                               trash_count,
-							  createdon
+							                createdon
 
                               )
 SELECT
@@ -36,8 +34,6 @@ SELECT
         c.remark,
         c.id_ref_user_fk,
         c.riverside,
-        c.container_url,
-        c.blob_name,
         c.id_ref_model_fk,
         point.min_time,
         point.max_time,
