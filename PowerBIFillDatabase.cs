@@ -19,8 +19,7 @@ namespace Surfrider.Jobs.Recurring
             Database = new PostgreDatabase(Helper.GetConnectionString());
 
             // TODO
-            // 0. Faire les modif sur le schéma campaign
-            // 0.1 Créer une bd de prod avec juste campaign.campaign, campaign.user, campign.media et le schéma label
+            //
             // 1. Faire un mecanisme de retry ou de log d'erreur
             // 2. Log les campaign pour lesquelles on a des erreur de calcul quelque part
             // ==> comme on va faire des batch de campaign, ça sera le batch qui serra en erreur
@@ -52,7 +51,7 @@ namespace Surfrider.Jobs.Recurring
             await ExecuteScript(@"./SqlScripts/9_insert_bi_trash_river.sql");
             await ExecuteScript(@"./SqlScripts/10_update_bi_river.sql");
 
-            // await CleanErrors(); // on vient clean toutes les campagnes pour lesquelles on a eu un probleme de calcul à un moment
+            // await CleanErrors(); // on vient clean toutes les campagnes pour ùquelles on a eu un probleme de calcul à un moment
 
             Console.WriteLine("-------------------- ALL DONE ---------------------");
 
