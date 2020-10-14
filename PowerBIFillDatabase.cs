@@ -19,7 +19,7 @@ namespace Surfrider.Jobs.Recurring
         {
             Console.WriteLine("USING " + Helper.GetConnectionString());
             Database = new PostgreDatabase(Helper.GetConnectionString());
-
+            await UpdateJsonFileWithDataAsync(55, 66, 77);
             // TODO
             // 0. Faire les modif sur le schéma campaign
             // 0.1 Créer une bd de prod avec juste campaign.campaign, campaign.user, campign.media et le schéma label
@@ -34,35 +34,35 @@ namespace Surfrider.Jobs.Recurring
             // 3.1 mettre numéro avec chaque boite du schéma
             // 3.2 Faire un Excel avec chaque boite et une colonne pour dire OUI/NON c'est déportable, et détailler les I/O pour chaque truc.
 
-            var startedOn = DateTime.Now;
+        //     var startedOn = DateTime.Now;
 
-            //    IList<Guid> newCampaignsIds = await RetrieveNewCampaigns(logger);
-            // ********************************* LOCAL TEST ONLY ***********************
-            IList<Guid> newCampaignsIds = new List<Guid>();
-            newCampaignsIds.Add(new Guid("d115922a-3ca9-49f7-b363-06c9383b6563"));
-            newCampaignsIds.Add(new Guid("2155da04-c2bb-433b-9a90-8ec8b8d74ee9"));
-            // *************************************************************************
-            ListOfCampaignsIds = FormatGuidsForSQL(newCampaignsIds);
-            PipelineStatus.Status = OperationStatus.OK;
-            PipelineStatus.Reason = string.Empty;
+        //     //    IList<Guid> newCampaignsIds = await RetrieveNewCampaigns(logger);
+        //     // ********************************* LOCAL TEST ONLY ***********************
+        //     IList<Guid> newCampaignsIds = new List<Guid>();
+        //     newCampaignsIds.Add(new Guid("d115922a-3ca9-49f7-b363-06c9383b6563"));
+        //     newCampaignsIds.Add(new Guid("2155da04-c2bb-433b-9a90-8ec8b8d74ee9"));
+        //     // *************************************************************************
+        //     ListOfCampaignsIds = FormatGuidsForSQL(newCampaignsIds);
+        //     PipelineStatus.Status = OperationStatus.OK;
+        //     PipelineStatus.Reason = string.Empty;
             
-            await ExecuteScript(@"./SqlScripts/2_update_campaign_trajectory_point.sql");
-            if(PipelineStatus.Status == OperationStatus.OK)
-             await ExecuteScript(@"./SqlScripts/3_insert_bi_campaign.sql");//inserts new campaigns into BI db schema
-            if(PipelineStatus.Status == OperationStatus.OK)
-           await ExecuteScript(@"./SqlScripts/4_insert_bi_campaign_distance_to_sea.sql");
-            if(PipelineStatus.Status == OperationStatus.OK)
-           await ExecuteScript(@"./SqlScripts/5_insert_bi_trajectory_point_river.sql"); //Pour chaque Trash on récupère la rivière associée et on projete la geometry du trash sur la rivière
-            if(PipelineStatus.Status == OperationStatus.OK)
-           await ExecuteScript(@"./SqlScripts/6_insert_bi_campaign_river.sql");
-            if(PipelineStatus.Status == OperationStatus.OK)
-           await ExecuteScript(@"./SqlScripts/7_get_bi_rivers_id.sql");
-            if(PipelineStatus.Status == OperationStatus.OK)
-           await ExecuteScript(@"./SqlScripts/8_update_bi_trash.sql");
-            if(PipelineStatus.Status == OperationStatus.OK)
-           await ExecuteScript(@"./SqlScripts/9_insert_bi_trash_river.sql");
-            if(PipelineStatus.Status == OperationStatus.OK)
-           await ExecuteScript(@"./SqlScripts/10_update_bi_river.sql");
+        //     await ExecuteScript(@"./SqlScripts/2_update_campaign_trajectory_point.sql");
+        //     if(PipelineStatus.Status == OperationStatus.OK)
+        //      await ExecuteScript(@"./SqlScripts/3_insert_bi_campaign.sql");//inserts new campaigns into BI db schema
+        //     if(PipelineStatus.Status == OperationStatus.OK)
+        //    await ExecuteScript(@"./SqlScripts/4_insert_bi_campaign_distance_to_sea.sql");
+        //     if(PipelineStatus.Status == OperationStatus.OK)
+        //    await ExecuteScript(@"./SqlScripts/5_insert_bi_trajectory_point_river.sql"); //Pour chaque Trash on récupère la rivière associée et on projete la geometry du trash sur la rivière
+        //     if(PipelineStatus.Status == OperationStatus.OK)
+        //    await ExecuteScript(@"./SqlScripts/6_insert_bi_campaign_river.sql");
+        //     if(PipelineStatus.Status == OperationStatus.OK)
+        //    await ExecuteScript(@"./SqlScripts/7_get_bi_rivers_id.sql");
+        //     if(PipelineStatus.Status == OperationStatus.OK)
+        //    await ExecuteScript(@"./SqlScripts/8_update_bi_trash.sql");
+        //     if(PipelineStatus.Status == OperationStatus.OK)
+        //    await ExecuteScript(@"./SqlScripts/9_insert_bi_trash_river.sql");
+        //     if(PipelineStatus.Status == OperationStatus.OK)
+        //    await ExecuteScript(@"./SqlScripts/10_update_bi_river.sql");
 
             // await CleanErrors(); // on vient clean toutes les campagnes pour lesquelles on a eu un probleme de calcul à un moment
 
@@ -154,32 +154,33 @@ namespace Surfrider.Jobs.Recurring
             return campaigns;
         }
 
-        private static async Task CreateNewFileAsync(){
+        private static async Task UpdateJsonFileWithDataAsync(int contributors, int coveredKm, int trashPerKm){
             // Create a BlobServiceClient object which will be used to create a container client
-            BlobServiceClient blobServiceClient = new BlobServiceClient(Helper.GetBlobStorageConnectionString());
+            Console.WriteLine("USING BLOB STORAGE CONNECTION STRING --> " + Helper.GetBlobStorageConnectionString());
+            //BlobServiceClient blobServiceClient = new BlobServiceClient(Helper.GetBlobStorageConnectionString());
 
-            //Create a unique name for the container
+            // Create the container if not exists and return a container client object
             string containerName = "public";
-
-            // Create the container and return a container client object
-            BlobContainerClient containerClient = await blobServiceClient.CreateBlobContainerAsync(containerName);
+            BlobContainerClient containerClient = new BlobContainerClient(Helper.GetBlobStorageConnectionString(),containerName);
+            containerClient.CreateIfNotExists(Azure.Storage.Blobs.Models.PublicAccessType.BlobContainer);
+            
             // Create a local file in the ./data/ directory for uploading and downloading
-            string localPath = "./data/";
+            string localPath = "./";
             string fileName = "data_home_page.json";
             string localFilePath = Path.Combine(localPath, fileName);
-
             // Write text to the file
-            await File.WriteAllTextAsync(localFilePath, @"{contributors: 10, coveredKm: 500, trashPerKm: 80}");
+            await File.WriteAllTextAsync(localFilePath, "{\"contributors\": " + contributors + ",\"coveredKm\": " + coveredKm + ",\"trashPerKm\": " + trashPerKm + "}");
 
             // Get a reference to a blob
             BlobClient blobClient = containerClient.GetBlobClient(fileName);
 
             Console.WriteLine("Uploading to Blob storage as blob:\n\t {0}\n", blobClient.Uri);
-
             // Open the file and upload its data
-            using FileStream uploadFileStream = File.OpenRead(localFilePath);
-            await blobClient.UploadAsync(uploadFileStream, true);
-            uploadFileStream.Close();
+            using (FileStream file = File.OpenRead(localFilePath))
+            {
+                await blobClient.UploadAsync(file);
+            }
+
         }
     }
 
