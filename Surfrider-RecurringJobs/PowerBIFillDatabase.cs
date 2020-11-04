@@ -18,9 +18,9 @@ namespace Surfrider.Jobs.Recurring
         public static async Task Run([TimerTrigger("0 0 2 * * *")]TimerInfo myTimer, ILogger logger)// runs everyd ay at 02:00
         {
             Console.WriteLine("USING " + Helper.GetConnectionString());
-            Database = new PostgreDatabase(Helper.GetConnectionString());
-            IDataFileWriter fileWriter = new DataFileWriter();
-            await fileWriter.UpdateJsonFileWithDataAsync(55, 66, 77);
+            // Database = new PostgreDatabase(Helper.GetConnectionString());
+            // IDataFileWriter fileWriter = new DataFileWriter();
+            // await fileWriter.UpdateJsonFileWithDataAsync(55, 66, 77);
             // TODO
             // 0. Faire les modif sur le schéma campaign
             // 0.1 Créer une bd de prod avec juste campaign.campaign, campaign.user, campign.media et le schéma label

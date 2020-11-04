@@ -31,7 +31,8 @@ namespace Surfrider_RecurringJobs.Tests
             await blobClient.DownloadToAsync(localPath);
 
             Assert.IsTrue(File.Exists(localFilePath));
-                // Read a text file line by line.  
+            
+            // Now we test if the file has been updated with new values
             string[] lines = File.ReadAllLines(localFilePath);  
             // Assert.AreEqual(lines[0], \\"contributors\": " + contributors + ",\"coveredKm\": " + coveredKm + ",\"trashPerKm\": " + trashPerKm + "})
             // assert file content is the same
