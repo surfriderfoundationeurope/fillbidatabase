@@ -45,7 +45,7 @@ BEGIN
         LIMIT 1
         ) closest_r ON TRUE
 
-      WHERE t.id_ref_campaign_fk IN (SELECT UNNEST(campaign_ids))
+      WHERE t.id_ref_campaign_fk IN (@campaign_ids)
       )
 
       SELECT
@@ -65,5 +65,3 @@ BEGIN
 
       DROP INDEX IF EXISTS bi.trash_river_closest_point_the_geom;
       CREATE INDEX trash_river_closest_point_the_geom on bi.trash_river using gist(closest_point_the_geom);
-
-END$$;

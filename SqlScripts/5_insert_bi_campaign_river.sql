@@ -25,7 +25,7 @@ WITH subquery_1 as (
 		bi_temp.trajectory_point_river  tr
 
 	INNER JOIN campaign.trajectory_point t on t.id = tr.id_ref_trajectory_point_fk
-	WHERE tr.id_ref_campaign_fk in (select unnest(campaign_ids))
+	WHERE tr.id_ref_campaign_fk in (@campaign_ids)
 
 	GROUP BY t.id_ref_campaign_fk, river_name
 

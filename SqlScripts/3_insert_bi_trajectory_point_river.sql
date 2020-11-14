@@ -1,9 +1,4 @@
-DO $$
-
-DECLARE campaign_ids uuid[] := ARRAY[@campaign_ids];
-BEGIN
-
-      INSERT INTO bi_temp.trajectory_point_river (
+INSERT INTO  bi_temp.trajectory_point_river (
 
                                              id_ref_trajectory_point_fk,
                                              id_ref_campaign_fk,
@@ -17,6 +12,7 @@ BEGIN
                                              createdon
 
                                              )
+
       WITH subquery_1 AS (
 
       SELECT
@@ -46,7 +42,8 @@ BEGIN
                           ) closest_r ON TRUE
 
 
-     -- WHERE t.id_ref_campaign_fk IN (SELECT UNNEST(campaign_ids))
+   WHERE t.id_ref_campaign_fk IN (@campaign_ids)
+
 
       )
 
@@ -64,9 +61,9 @@ BEGIN
       FROM
         subquery_1;
 
-      DROP INDEX IF EXISTS bi.trajectory_point_river_id_ref_trajectory_point_fk;
-      CREATE INDEX trajectory_point_river_id_ref_trajectory_point_fk ON bi_temp.trajectory_point_river (id_ref_trajectory_point_fk);
 
-END$$;
+
+DROP INDEX IF EXISTS bi_temp.trajectory_point_river_id_ref_trajectory_point_fk;
+CREATE INDEX trajectory_point_river_id_ref_trajectory_point_fk ON bi_temp.trajectory_point_river (id_ref_trajectory_point_fk);
 
 

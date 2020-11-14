@@ -1,12 +1,13 @@
-DO $$
 
-DECLARE campaign_ids uuid[] := ARRAY[@campaign_ids];
 
-BEGIN
+DROP INDEX IF EXISTS bi.campaign_id ;
+CREATE INDEX campaign_id  on bi.campaign (id);
 
-    INSERT INTO bi_temp.campaign (
 
-                              id_ref_campaign_fk,
+/*
+INSERT INTO bi_temp.campaign (
+
+                              id,
                               locomotion,
                               isaidriven,
 							                remark,
@@ -70,7 +71,7 @@ SELECT
                 id_ref_campaign_fk,
                 sum(distance) total_distance,
                 avg(speed) avg_speed
-              FROM campaign.trajectory_point tp
+              FROM bi_temp.trajectory_point tp
               WHERE distance > 0
               GROUP BY id_ref_campaign_fk
 
@@ -82,26 +83,90 @@ SELECT
                 SELECT
                   id_ref_campaign_fk,
                   count(*) trash_count
-                FROM campaign.trash
+                FROM bi_temp.trash
                 GROUP BY id_ref_campaign_fk
 
                ) trash_n ON trash_n.id_ref_campaign_fk = c.id
 
 
-    WHERE c.id in (select unnest(campaign_ids))
+
+    WHERE c.id in (@campaign_ids)
+
     ;
+*/
 
-    DROP INDEX IF EXISTS bi.campaign_id_ref_campaign_fk;
-    CREATE INDEX campaign_id_ref_campaign_fk on bi.campaign (id_ref_campaign_fk);
 
-    DROP INDEX IF EXISTS bi.campaign_start_point;
-    CREATE INDEX campaign_start_point on bi.campaign using gist(start_point);
+UPDATE  bi_temp.campaign c
+SET start_date  = point.min_time,
+	end_date=point.max_time,
+	duration = age(point.max_time,point.min_time)
 
-    DROP INDEX IF EXISTS bi.campaign_end_point;
-    CREATE INDEX campaign_end_point on bi.campaign using gist(end_point);
+FROM (
+       SELECT
 
-END$$;
+       id_ref_campaign_fk,
+       min(time) min_time,
+       max(time) max_time
 
+       FROM campaign.trajectory_point
+       GROUP BY id_ref_campaign_fk
+
+     ) point
+
+ WHERE point.id_ref_campaign_fk = c.id AND c.id in (@campaign_ids);
+
+
+UPDATE  bi_temp.campaign c
+SET start_point = start_geom.the_geom
+FROM bi_temp.trajectory_point start_geom
+WHERE start_geom.id_ref_campaign_fk = c.id and start_geom.time = c.start_date and c.id in (@campaign_ids);
+
+UPDATE  bi_temp.campaign c
+SET end_point = end_geom.the_geom
+FROM bi_temp.trajectory_point end_geom
+WHERE end_geom.id_ref_campaign_fk = c.id and end_geom.time = c.end_date and c.id in (@campaign_ids);
+
+UPDATE  bi_temp.campaign c
+SET distance_start_end = st_distance(start_point, end_point)
+WHERE c.id in (@campaign_ids);
+
+UPDATE bi_temp.campaign c
+SET total_distance = agg.total_distance,
+	avg_speed = agg.avg_speed
+FROM (
+			SELECT
+                id_ref_campaign_fk,
+                sum(distance) total_distance,
+                avg(speed) avg_speed
+              FROM bi_temp.trajectory_point tp
+              WHERE distance > 0
+              GROUP BY id_ref_campaign_fk
+  ) agg
+where agg.id_ref_campaign_fk = c.id and c.id in (@campaign_ids);
+
+
+
+UPDATE bi_temp.campaign c
+SET trash_count = trash_n.trash_count,
+	createdon = current_timestamp
+from (
+
+                SELECT
+                  id_ref_campaign_fk,
+                  count(*) trash_count
+                FROM bi_temp.trash
+                GROUP BY id_ref_campaign_fk
+
+               ) trash_n
+
+ where trash_n.id_ref_campaign_fk = c.id and c.id in (@campaign_ids);
+
+
+DROP INDEX IF EXISTS bi.campaign_start_point;
+CREATE INDEX campaign_start_point on bi.campaign using gist(start_point);
+
+DROP INDEX IF EXISTS bi.campaign_end_point;
+CREATE INDEX campaign_end_point on bi.campaign using gist(end_point);
 
 
 

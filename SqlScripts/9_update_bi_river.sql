@@ -1,8 +1,3 @@
-DO $$
-
-DECLARE rivers_id int[] := ARRAY[@rivers_id];
-BEGIN
-
     UPDATE  bi.river
     SET  distance_monitored = st_length(st_intersection(r2.the_geom_monitored,river.the_geom)),
        the_geom_monitored = r2.the_geom_monitored
@@ -15,7 +10,7 @@ BEGIN
         bi.campaign_river r
 
 	  INNER JOIN bi.river br on br.name = r.river_name
-      WHERE br.id in (select(unnest(rivers_id)))
+      WHERE br.id in (@rivers_id)
       GROUP BY r.river_name
 
       ) r2
@@ -35,11 +30,9 @@ BEGIN
         bi.trash_river tr
 
 	  INNER JOIN bi.river br on br.name = tr.river_name
-      WHERE br.id in (select(unnest(rivers_id)))
+      WHERE br.id in (@rivers_id)
       GROUP BY tr.river_name
 
     ) t
     WHERE t.river_name = river.name
     ;
-
-END$$;

@@ -1,8 +1,3 @@
-DO $$
-
-DECLARE campaign_ids uuid[] := ARRAY[@campaign_ids];
-BEGIN
-
 CREATE TEMP TABLE trash_admin AS
 SELECT
 	t.id,
@@ -20,8 +15,11 @@ FROM
 LEFT JOIN referential.municipality mun on st_contains(mun.the_geom, t.the_geom)
 LEFT JOIN referential.department dep on dep.id = mun.id_ref_department_fk
 LEFT JOIN referential.state s on s.id = dep.id_ref_state_fk
-LEFT JOIN referential.country c on c.id = s.id_ref_country_fk;
+LEFT JOIN referential.country c on c.id = s.id_ref_country_fk
 
+WHERE t.id_ref_campaign_fk in (@campaign_ids);
+
+;
 
 
 UPDATE bi_temp.trash t
@@ -36,7 +34,6 @@ SET
 	country_name = ta.country_name
 
 FROM trash_admin ta
-WHERE ta.id = t.id;
+WHERE ta.id = t.id
 
-
-END$$;
+;
