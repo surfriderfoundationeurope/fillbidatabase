@@ -22,9 +22,12 @@ namespace Surfrider
                 using (var cmd = new NpgsqlCommand())
                 {
                     cmd.Connection = conn;
+                    query = query.Replace("\r\n", " ").Replace("\r", " ").Replace("\n", " ").Replace("\t", "    ");
                     cmd.CommandText = query;
-                    foreach(var arg in args){
-                        cmd.Parameters.AddWithValue(arg.Key, arg.Value);
+                    if(args != null){
+                        foreach(var arg in args){
+                            cmd.Parameters.AddWithValue(arg.Key, arg.Value);
+                        }
                     }
                     return await cmd.ExecuteNonQueryAsync();
                 }

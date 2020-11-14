@@ -20,9 +20,9 @@ public static class Helper {
         }
         public static string GetConnectionString()
         {
-            if (Environment.GetEnvironmentVariable("AZURE_FUNCTIONS_ENVIRONMENT") != "Local")
-                return GetKeyVaultConnectionString("db-plastico-dev-connectionstring");
-            else
+            // if (Environment.GetEnvironmentVariable("AZURE_FUNCTIONS_ENVIRONMENT") != "Local")
+            //     return GetKeyVaultConnectionString("db-plastico-dev-connectionstring");
+            // else
                 return Environment.GetEnvironmentVariable("postgre_connection");
         }
 }
