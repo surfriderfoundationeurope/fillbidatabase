@@ -1,7 +1,7 @@
 
 
-DROP INDEX IF EXISTS bi.campaign_id ;
-CREATE INDEX campaign_id  on bi.campaign (id);
+DROP INDEX IF EXISTS bi_temp.campaign_id ;
+CREATE INDEX campaign_id  on bi_temp.campaign (id);
 
 
 /*
@@ -162,12 +162,35 @@ from (
  where trash_n.id_ref_campaign_fk = c.id and c.id in (@campaign_ids);
 
 
-DROP INDEX IF EXISTS bi.campaign_start_point;
-CREATE INDEX campaign_start_point on bi.campaign using gist(start_point);
+DROP INDEX IF EXISTS bi_temp.campaign_start_point;
+CREATE INDEX campaign_start_point on bi_temp.campaign using gist(start_point);
 
-DROP INDEX IF EXISTS bi.campaign_end_point;
-CREATE INDEX campaign_end_point on bi.campaign using gist(end_point);
+DROP INDEX IF EXISTS bi_temp.campaign_end_point;
+CREATE INDEX campaign_end_point on bi_temp.campaign using gist(end_point);
 
 
+DO
+$$
+DECLARE
+	test bool = False;
+BEGIN
+
+SELECT
+  sum((rc.id is not null)::int) > 0 into test
+
+FROM
+bi_temp.campaign  c
+inner join referential.country rc on st_contains(rc.the_geom, c.start_point) or st_contains(rc.the_geom, c.end_point)
+
+where c.id  in (@campaign_ids)
+group by c.id
+;
+if not test then
+	 raise exception 'country referential is not available yet for this campaign';
+end if;
+
+end;
+$$
+language plpgsql;
 
 

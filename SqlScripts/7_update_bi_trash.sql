@@ -37,3 +37,5 @@ FROM trash_admin ta
 WHERE ta.id = t.id
 
 ;
+
+DROP TABLE IF EXISTS trash_admin;

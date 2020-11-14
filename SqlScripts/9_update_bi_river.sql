@@ -1,4 +1,4 @@
-    UPDATE  bi.river
+    UPDATE  bi_temp.river
     SET  distance_monitored = st_length(st_intersection(r2.the_geom_monitored,river.the_geom)),
        the_geom_monitored = r2.the_geom_monitored
     FROM
@@ -7,10 +7,10 @@
         r.river_name,
         st_union(st_buffer(r.the_geom, 0.01)) the_geom_monitored
       FROM
-        bi.campaign_river r
+        bi_temp.campaign_river r
 
 	  INNER JOIN bi.river br on br.name = r.river_name
-      WHERE br.id in (@rivers_id)
+      WHERE br.name in (@rivers_id)
       GROUP BY r.river_name
 
       ) r2
@@ -18,7 +18,7 @@
     ;
 
 
-    UPDATE bi.river
+    UPDATE bi_temp.river
     SET count_trash  = t.count_trash,
         trash_per_km = t.count_trash/(NULLIF(distance_monitored,0)/1000)
     FROM
@@ -30,7 +30,7 @@
         bi.trash_river tr
 
 	  INNER JOIN bi.river br on br.name = tr.river_name
-      WHERE br.id in (@rivers_id)
+      WHERE br.name in (@rivers_id)
       GROUP BY tr.river_name
 
     ) t

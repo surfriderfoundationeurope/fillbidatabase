@@ -35,3 +35,4 @@ SET
 WHERE id_ref_campaign_fk in (@campaign_ids)
 	;
 
+DROP TABLE IF EXISTS trajectory_point_agg;

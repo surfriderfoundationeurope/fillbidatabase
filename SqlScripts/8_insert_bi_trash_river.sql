@@ -1,9 +1,4 @@
-DO $$
-
-DECLARE campaign_ids uuid[] := ARRAY[@campaign_ids];
-BEGIN
-
-      INSERT INTO bi_temp.trash_river (
+INSERT INTO bi_temp.trash_river (
 
                                   id_ref_trash_fk,
                                   id_ref_campaign_fk,
@@ -41,7 +36,7 @@ BEGIN
         referential.river r
         WHERE name IS NOT NULL
 
-        ORDER BY bi_temp.the_geom <-> t.the_geom
+        ORDER BY r.the_geom <-> t.the_geom
         LIMIT 1
         ) closest_r ON TRUE
 

@@ -1,33 +1,40 @@
-DO $$
+drop index if exists bi_temp.trajectory_point_river_closest_point_the_geom;
+create index trajectory_point_river_closest_point_the_geom on bi_temp.trajectory_point_river using gist(closest_point_the_geom);
 
-DECLARE campaign_ids uuid[] := ARRAY[@campaign_ids];
-BEGIN
 
 INSERT INTO bi_temp.campaign_river (
 
 								id_ref_campaign_fk,
 								the_geom,
 								distance,
-								river_name
-
-
+								river_name,
+								id_ref_river_fk
 
                  )
-WITH subquery_1 as (
+with subquery_1 AS (
 
 	SELECT
 		t.id_ref_campaign_fk,
 		st_makevalid(st_makeline(closest_point_the_geom ORDER BY t.time)) the_geom,
 		river_name,
-		st_union(river_the_geom) river_the_geom
+		st_union(river_the_geom) river_the_geom,
+		id_ref_river_fk
 
 	FROM
-		bi_temp.trajectory_point_river  tr
+		(
 
-	INNER JOIN campaign.trajectory_point t on t.id = tr.id_ref_trajectory_point_fk
-	WHERE tr.id_ref_campaign_fk in (@campaign_ids)
+		 SELECT *
+		 FROM bi_temp.trajectory_point_river
+		 WHERE id_ref_campaign_fk in (@campaign_ids)
+		 ORDER BY random()
+		 LIMIT 100
+		 )  tr
 
-	GROUP BY t.id_ref_campaign_fk, river_name
+	INNER JOIN bi_temp.trajectory_point t on t.id = tr.id_ref_trajectory_point_fk
+
+	GROUP BY t.id_ref_campaign_fk,
+					river_name,
+					id_ref_river_fk
 
 )
 SELECT
@@ -35,11 +42,11 @@ SELECT
 	id_ref_campaign_fk,
 	the_geom,
 	st_length(the_geom) distance,
-	river_name
+	river_name,
+	id_ref_river_fk
 
 FROM
   subquery_1;
 
-END$$;
 
 

@@ -20,6 +20,14 @@ from campaign.trash_type tt
 ;
 */
 
+INSERT INTO logs.bi (id, campaign_id)
+
+SELECT c.id, c.id
+from campaign.campaign c
+LEFT JOIN logs.bi l ON c.id = l.campaign_id
+WHERE l.campaign_id is null AND c.id IN (@campaign_ids);
+
+
 INSERT INTO bi_temp.campaign (id, locomotion, isaidriven, remark, id_ref_user_fk, riverside, createdon)
 SELECT
 
@@ -32,7 +40,7 @@ SELECT
 	createdon
 
 FROM campaign.campaign
-where createdon >= @last_run
+WHERE id IN (@campaign_ids)
 
 ;
 
@@ -53,12 +61,11 @@ SELECT
 	createdon
 
 FROM campaign.trash
-where createdon >= @last_run
-
+WHERE id_ref_campaign_fk IN (@campaign_ids)
 ;
 
 
-insert into bi_temp.trajectory_point (
+INSERT INTO bi_temp.trajectory_point (
 								id,
 								the_geom,
 								id_ref_campaign_fk,
@@ -86,7 +93,7 @@ SELECT
 	createdon
 
 FROM campaign.trajectory_point tp
-WHERE createdon >= @last_run
+WHERE id_ref_campaign_fk IN (@campaign_ids)
 ;
 
 DROP INDEX IF EXISTS bi_temp.trash_the_geom;
