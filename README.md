@@ -1,6 +1,6 @@
 # Fill Bi Database
 Code for the recurring job that fills Bi database schema.
-This function runs **every day at 00:00**
+This function runs **every day at 02:00**
 
 # Principles
 Several ordered SQL request will be executed on the server in order to compute BI data.
@@ -10,6 +10,12 @@ Several ordered SQL request will be executed on the server in order to compute B
 *In red the steps we think will take time. In grey, the optionnal step we will do in a second time.*
 
 
+
+# Architectural Decision
+* Why keep separation between campaign.campaign and campaign.media?
+The idea here is to stay aligned with the "S" of the SOLID principles : Single Responsability.
+As Campaign and Media are two different entities with different business function/purpose, we need to keep them separated in the Database. It allows to extend the possibilities around campaigns without manipulating it.
+If not, in long term, this could be impactful on the campaign table which is the core of the whole Plastic Origins application.
 
 # Test it
 

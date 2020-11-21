@@ -4,6 +4,8 @@ using Microsoft.Extensions.Logging;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using Npgsql;
+using System.IO;
+using Azure.Storage.Blobs;
 
 namespace Surfrider.Jobs.Recurring
 {
@@ -16,8 +18,9 @@ namespace Surfrider.Jobs.Recurring
         public static async Task Run([TimerTrigger("0 0 2 * * *")]TimerInfo myTimer, ILogger logger)// runs everyd ay at 02:00
         {
             Console.WriteLine("USING " + Helper.GetConnectionString());
-            Database = new PostgreDatabase(Helper.GetConnectionString());
-
+            // Database = new PostgreDatabase(Helper.GetConnectionString());
+            // IDataFileWriter fileWriter = new DataFileWriter();
+            // await fileWriter.UpdateJsonFileWithDataAsync(55, 66, 77);
             // TODO
             //
             // 1. Faire un mecanisme de retry ou de log d'erreur
@@ -31,25 +34,35 @@ namespace Surfrider.Jobs.Recurring
             // 3.1 mettre numéro avec chaque boite du schéma
             // 3.2 Faire un Excel avec chaque boite et une colonne pour dire OUI/NON c'est déportable, et détailler les I/O pour chaque truc.
 
-            var startedOn = DateTime.Now;
+        //     var startedOn = DateTime.Now;
 
-            //    IList<Guid> newCampaignsIds = await RetrieveNewCampaigns(logger);
-            // ********************************* LOCAL TEST ONLY ***********************
-            IList<Guid> newCampaignsIds = new List<Guid>();
-            newCampaignsIds.Add(new Guid("d115922a-3ca9-49f7-b363-06c9383b6563"));
-            newCampaignsIds.Add(new Guid("2155da04-c2bb-433b-9a90-8ec8b8d74ee9"));
-            // *************************************************************************
-            ListOfCampaignsIds = FormatGuidsForSQL(newCampaignsIds);
-
-            await ExecuteScript(@"./SqlScripts/2_update_campaign_trajectory_point.sql");
-            await ExecuteScript(@"./SqlScripts/3_insert_bi_campaign.sql");//inserts new campaigns into BI db schema
-            await ExecuteScript(@"./SqlScripts/4_insert_bi_campaign_distance_to_sea.sql");
-            await ExecuteScript(@"./SqlScripts/5_insert_bi_trajectory_point_river.sql"); //Pour chaque Trash on récupère la rivière associée et on projete la geometry du trash sur la rivière
-            await ExecuteScript(@"./SqlScripts/6_insert_bi_campaign_river.sql");
-            await ExecuteScript(@"./SqlScripts/7_get_bi_rivers_id.sql");
-            await ExecuteScript(@"./SqlScripts/8_update_bi_trash.sql");
-            await ExecuteScript(@"./SqlScripts/9_insert_bi_trash_river.sql");
-            await ExecuteScript(@"./SqlScripts/10_update_bi_river.sql");
+        //     //    IList<Guid> newCampaignsIds = await RetrieveNewCampaigns(logger);
+        //     // ********************************* LOCAL TEST ONLY ***********************
+        //     IList<Guid> newCampaignsIds = new List<Guid>();
+        //     newCampaignsIds.Add(new Guid("d115922a-3ca9-49f7-b363-06c9383b6563"));
+        //     newCampaignsIds.Add(new Guid("2155da04-c2bb-433b-9a90-8ec8b8d74ee9"));
+        //     // *************************************************************************
+        //     ListOfCampaignsIds = FormatGuidsForSQL(newCampaignsIds);
+        //     PipelineStatus.Status = OperationStatus.OK;
+        //     PipelineStatus.Reason = string.Empty;
+            
+        //     await ExecuteScript(@"./SqlScripts/2_update_campaign_trajectory_point.sql");
+        //     if(PipelineStatus.Status == OperationStatus.OK)
+        //      await ExecuteScript(@"./SqlScripts/3_insert_bi_campaign.sql");//inserts new campaigns into BI db schema
+        //     if(PipelineStatus.Status == OperationStatus.OK)
+        //    await ExecuteScript(@"./SqlScripts/4_insert_bi_campaign_distance_to_sea.sql");
+        //     if(PipelineStatus.Status == OperationStatus.OK)
+        //    await ExecuteScript(@"./SqlScripts/5_insert_bi_trajectory_point_river.sql"); //Pour chaque Trash on récupère la rivière associée et on projete la geometry du trash sur la rivière
+        //     if(PipelineStatus.Status == OperationStatus.OK)
+        //    await ExecuteScript(@"./SqlScripts/6_insert_bi_campaign_river.sql");
+        //     if(PipelineStatus.Status == OperationStatus.OK)
+        //    await ExecuteScript(@"./SqlScripts/7_get_bi_rivers_id.sql");
+        //     if(PipelineStatus.Status == OperationStatus.OK)
+        //    await ExecuteScript(@"./SqlScripts/8_update_bi_trash.sql");
+        //     if(PipelineStatus.Status == OperationStatus.OK)
+        //    await ExecuteScript(@"./SqlScripts/9_insert_bi_trash_river.sql");
+        //     if(PipelineStatus.Status == OperationStatus.OK)
+        //    await ExecuteScript(@"./SqlScripts/10_update_bi_river.sql");
 
             // await CleanErrors(); // on vient clean toutes les campagnes pour ùquelles on a eu un probleme de calcul à un moment
 
@@ -75,9 +88,27 @@ namespace Surfrider.Jobs.Recurring
         }
 
         private static async Task ExecuteScript(string scriptPath){
-            var command = System.IO.File.ReadAllText(scriptPath);
-            command = command.Replace("@campaign_ids", ListOfCampaignsIds);
-            await Database.ExecuteNonQuery(command);
+            string command = string.Empty;
+            try {
+                command = System.IO.File.ReadAllText(scriptPath);
+            }catch(Exception e){
+                Console.WriteLine($"-------------- ERROR READING SQL FILE {scriptPath}");
+                 PipelineStatus.Status = OperationStatus.ERROR;
+                 PipelineStatus.Reason = e.ToString();
+            }
+            if(command != string.Empty){
+                try {
+
+                command = command.Replace("@campaign_ids", ListOfCampaignsIds);
+                await Database.ExecuteNonQuery(command);
+                }catch(Exception e){
+                    Console.WriteLine($"-------------- ERROR DURING SQL FILE EXECUTION {scriptPath}");
+                    PipelineStatus.Status = OperationStatus.ERROR;
+                    PipelineStatus.Reason = e.ToString();
+                }
+            }
+           PipelineStatus.Status = OperationStatus.OK;
+
         }
 
         private static async Task InsertLog(DateTime startedOn, OperationStatus status, ILogger log)
@@ -122,8 +153,6 @@ namespace Surfrider.Jobs.Recurring
                 
             return campaigns;
         }
-
-
     }
 
 }
