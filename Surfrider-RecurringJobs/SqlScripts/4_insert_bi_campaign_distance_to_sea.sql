@@ -13,6 +13,7 @@ BEGIN
 drop table if exists trash_06 ;
 create table trash_06 as
 
+/* ------------------------------------------------------------------------------------------------------------------------ */
 SELECT
 	t.*
 FROM
@@ -23,10 +24,11 @@ WHERE d.insee_dep = '06'
 ;
 
 
-
+/* ------------------------------------------------------------------------------------------------------------------------ */
 drop table if exists hydro_node_06 ;
 create table hydro_node_06 as
 
+/* ------------------------------------------------------------------------------------------------------------------------ */
 SELECT
 	node.*
 FROM
@@ -36,6 +38,7 @@ INNER JOIN raw_data.departement d on  st_intersects(node.geometry, d.geometry)
 WHERE d.insee_dep = '06'
 ;
 
+/* ------------------------------------------------------------------------------------------------------------------------ */
 DROP TABLE IF EXISTS river_06;
 CREATE TABLE river_06 as
 select
@@ -47,7 +50,7 @@ INNER join  raw_data.departement d on  st_intersects(river.geometry, d.geometry)
 WHERE   d.insee_dep = '06';
 drop index if exists river_06_the_geom; create index river_06_the_geom on river_06 using gist(the_geom);
 
-
+/* ------------------------------------------------------------------------------------------------------------------------ */
 DROP TABLE IF EXISTS cours_d_eau_06;
 CREATE TABLE cours_d_eau_06 as
 select
@@ -57,6 +60,7 @@ FROM
 INNER join  raw_data.departement d on  st_intersects(c.geometry, d.geometry)
 WHERE   d.insee_dep = '06';
 
+/* ------------------------------------------------------------------------------------------------------------------------ */
 ------------------------------------------------------------------------
 ------------------------------------------------------------------------
 ------------------------------------------------------------------------
@@ -71,7 +75,7 @@ SELECT topology.CreateTopology('river_topo', 2154);
 SELECT topology.AddTopoGeometryColumn('river_topo', 'public', 'river_06', 'topo_geom', 'LINESTRING');
 UPDATE river_06 SET topo_geom = topology.toTopoGeom(the_geom, 'river_topo', 1, 1.0);
 
-
+/* ------------------------------------------------------------------------------------------------------------------------ */
 ------------------------------------------------------------------------
 ------------------------------------------------------------------------
 ------------------------------------------------------------------------
@@ -112,7 +116,7 @@ FROM (select geometry, id, id_ce_amon, id_ce_aval from raw_data.noeud_hydrograph
 WHERE  nh.id IS NOT NULL  and st_intersects(nh.geometry, n.the_geom)
 ;
 
-
+/* ------------------------------------------------------------------------------------------------------------------------ */
 ------------------------------------------
 ------------------------------------------
 ------------------------------------------
@@ -144,7 +148,7 @@ left join lateral (
 				) lls on True
 ;
 
-
+/* ------------------------------------------------------------------------------------------------------------------------ */
 DROP TABLE IF EXISTS closest_node;
 create table closest_node AS
 SELECT
@@ -166,7 +170,7 @@ left join lateral (
 				) lls on True
 ;
 
-
+/* ------------------------------------------------------------------------------------------------------------------------ */
 drop table if exists closest_node_temp;
 create temp table closest_node_temp as
 select distinct node_id from closest_node ;
@@ -175,7 +179,7 @@ drop table if exists closest_limit_land_sea_temp;
 create temp table closest_limit_land_sea_temp as
 select distinct node_id from closest_limit_land_sea;
 
-
+/* ------------------------------------------------------------------------------------------------------------------------ */
 DROP TABLE IF EXISTS shortest_path;
 CREATE TABLE shortest_path as
 SELECT
@@ -192,7 +196,7 @@ false) pg_r
 ;
 
 
-
+/* ------------------------------------------------------------------------------------------------------------------------ */
 drop table shortest_path_visualization;
 create table shortest_path_visualization as
 select ed.geom from shortest_path sp
@@ -215,7 +219,7 @@ start_vid, end_vid
 order by start_vid, sum(cost) asc
 ;
 
-
+/* ------------------------------------------------------------------------------------------------------------------------ */
 DROP TABLE IF EXISTS best_track_viz;
 CREATE TABLE best_track_viz as
 

@@ -17,7 +17,7 @@
     WHERE r2.river_name = river.name
     ;
 
-
+/* ------------------------------------------------------------------------------------------------------------------------ */
     UPDATE bi_temp.river
     SET count_trash  = t.count_trash,
         trash_per_km = t.count_trash/(NULLIF(distance_monitored,0)/1000)

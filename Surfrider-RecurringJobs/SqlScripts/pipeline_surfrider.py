@@ -207,7 +207,7 @@ def query_launcher(df, step, to_replace, key, unique=False):
 
                     to_replace["monitoring"][str(step)].append(eta)
 
-                else:
+                else:# si step = -1, on vient juste logger dans table de log un SUCCESS
                     metadata = {"initiated_on": pipeline_start_date,
                                 "finished_on": str(datetime.now()),
                                 "status": "SUCCESS",
@@ -253,6 +253,8 @@ def update_log_table(metadata):
 
     return query
 
+# to_replace = tableau qui contient les id des campaign
+# execute le script 6 et renvoie les id des rivieres concernées par les nouvelles campaign
 def get_river_ids(to_replace):
 
 

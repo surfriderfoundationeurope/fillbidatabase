@@ -61,7 +61,7 @@ INSERT INTO  bi_temp.trajectory_point_river (
       FROM
         subquery_1;
 
-
+/* ------------------------------------------------------------------------------------------------------------------------ */
 
 DROP INDEX IF EXISTS bi_temp.trajectory_point_river_id_ref_trajectory_point_fk;
 CREATE INDEX trajectory_point_river_id_ref_trajectory_point_fk ON bi_temp.trajectory_point_river (id_ref_trajectory_point_fk);

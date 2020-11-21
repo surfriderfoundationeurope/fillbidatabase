@@ -95,7 +95,7 @@ SELECT
     ;
 */
 
-
+/* ------------------------------------------------------------------------------------------------------------------------ */
 UPDATE  bi_temp.campaign c
 SET start_date  = point.min_time,
 	end_date=point.max_time,
@@ -115,21 +115,24 @@ FROM (
 
  WHERE point.id_ref_campaign_fk = c.id AND c.id in (@campaign_ids);
 
-
+/* ------------------------------------------------------------------------------------------------------------------------ */
 UPDATE  bi_temp.campaign c
 SET start_point = start_geom.the_geom
 FROM bi_temp.trajectory_point start_geom
 WHERE start_geom.id_ref_campaign_fk = c.id and start_geom.time = c.start_date and c.id in (@campaign_ids);
 
+/* ------------------------------------------------------------------------------------------------------------------------ */
 UPDATE  bi_temp.campaign c
 SET end_point = end_geom.the_geom
 FROM bi_temp.trajectory_point end_geom
 WHERE end_geom.id_ref_campaign_fk = c.id and end_geom.time = c.end_date and c.id in (@campaign_ids);
 
+/* ------------------------------------------------------------------------------------------------------------------------ */
 UPDATE  bi_temp.campaign c
 SET distance_start_end = st_distance(start_point, end_point)
 WHERE c.id in (@campaign_ids);
 
+/* ------------------------------------------------------------------------------------------------------------------------ */
 UPDATE bi_temp.campaign c
 SET total_distance = agg.total_distance,
 	avg_speed = agg.avg_speed
@@ -145,7 +148,7 @@ FROM (
 where agg.id_ref_campaign_fk = c.id and c.id in (@campaign_ids);
 
 
-
+/* ------------------------------------------------------------------------------------------------------------------------ */
 UPDATE bi_temp.campaign c
 SET trash_count = trash_n.trash_count,
 	createdon = current_timestamp
@@ -161,14 +164,14 @@ from (
 
  where trash_n.id_ref_campaign_fk = c.id and c.id in (@campaign_ids);
 
-
+/* ------------------------------------------------------------------------------------------------------------------------ */
 DROP INDEX IF EXISTS bi_temp.campaign_start_point;
 CREATE INDEX campaign_start_point on bi_temp.campaign using gist(start_point);
 
 DROP INDEX IF EXISTS bi_temp.campaign_end_point;
 CREATE INDEX campaign_end_point on bi_temp.campaign using gist(end_point);
 
-
+/* ------------------------------------------------------------------------------------------------------------------------ */
 DO
 $$
 DECLARE
@@ -193,4 +196,4 @@ end;
 $$
 language plpgsql;
 
-
+/* ------------------------------------------------------------------------------------------------------------------------ */

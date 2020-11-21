@@ -8,7 +8,7 @@ SELECT
 FROM bi_temp.trajectory_point
 WHERE id_ref_campaign_fk in (@campaign_ids)
 ;
-
+/* ------------------------------------------------------------------------------------------------------------------------ */
 update bi_temp.trajectory_point t
 SET
 	distance = agg.distance,
@@ -17,7 +17,7 @@ SET
 from   trajectory_point_agg  agg
 where agg.id = t.id;
 
-
+/* ------------------------------------------------------------------------------------------------------------------------ */
 UPDATE bi_temp.trajectory_point
 SET speed = (distance/EXTRACT(epoch FROM time_diff))*3.6
 WHERE speed IS NULL
@@ -26,7 +26,7 @@ WHERE speed IS NULL
 		AND distance > 0
 		AND id_ref_campaign_fk in (@campaign_ids)
 	;
-
+/* ------------------------------------------------------------------------------------------------------------------------ */
 UPDATE bi_temp.trajectory_point
 SET
 	lat = st_y(st_transform(the_geom, 4326)),
@@ -34,5 +34,5 @@ SET
 
 WHERE id_ref_campaign_fk in (@campaign_ids)
 	;
-
+/* ------------------------------------------------------------------------------------------------------------------------ */
 DROP TABLE IF EXISTS trajectory_point_agg;
