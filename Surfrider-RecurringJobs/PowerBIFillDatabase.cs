@@ -15,54 +15,58 @@ namespace Surfrider.Jobs.Recurring
         public static string ScriptVersion = "0.3";
         private static string ListOfCampaignsIds;
         [FunctionName("PowerBIFillDatabase")]
-        public static async Task Run([TimerTrigger("0 0 2 * * *")]TimerInfo myTimer, ILogger logger)// runs everyd ay at 02:00
+        public static async Task Run([TimerTrigger("0 0 2 * * *")] TimerInfo myTimer, ILogger logger)// runs everyd ay at 02:00
         {
             Console.WriteLine("USING " + Helper.GetConnectionString());
             // Database = new PostgreDatabase(Helper.GetConnectionString());
             // IDataFileWriter fileWriter = new DataFileWriter();
             // await fileWriter.UpdateJsonFileWithDataAsync(55, 66, 77);
             // TODO
-            //
-            // 1. Faire un mecanisme de retry ou de log d'erreur
-            // 2. Log les campaign pour lesquelles on a des erreur de calcul quelque part
-            // ==> comme on va faire des batch de campaign, ça sera le batch qui serra en erreur
-            // ==> si erreur, on vient pas mettre à jour le status de la campaign dans logs.bi. Par contre, on
-            // vient mettre à jour le finished_on, reason et failed_step.
-            // >>>> Changer le nom du champs script_version en pipeline_version.
 
-            // 3. Clément : voir si on peut déporter en C# certains calculs
-            // 3.1 mettre numéro avec chaque boite du schéma
-            // 3.2 Faire un Excel avec chaque boite et une colonne pour dire OUI/NON c'est déportable, et détailler les I/O pour chaque truc.
 
-        //     var startedOn = DateTime.Now;
+            var startedOn = DateTime.Now;
+            // 0. RETRIEVE NEW CAMPAIGNS
+            IList<Guid> newCampaignsIds = await RetrieveNewCampaigns(logger);
+            // 1. COMPUTE ON CAMPAIGNS
+            await ComputeOnCampaignsAsync(newCampaignsIds);
+            // 2. SELECT RIVERS NAME
+            IDictionary<Guid, string> RiversToComputeOn = await SelectRiversAsync();
+            // 3. COMPUTE ON RIVERS
+            await ComputeOnRiversAsync(RiversToComputeOn);
+            // 4. COMMIT PROD DATA
+            await CommitProductionDataAsync(newCampaignsIds);
 
-        //     //    IList<Guid> newCampaignsIds = await RetrieveNewCampaigns(logger);
-        //     // ********************************* LOCAL TEST ONLY ***********************
-        //     IList<Guid> newCampaignsIds = new List<Guid>();
-        //     newCampaignsIds.Add(new Guid("d115922a-3ca9-49f7-b363-06c9383b6563"));
-        //     newCampaignsIds.Add(new Guid("2155da04-c2bb-433b-9a90-8ec8b8d74ee9"));
-        //     // *************************************************************************
-        //     ListOfCampaignsIds = FormatGuidsForSQL(newCampaignsIds);
-        //     PipelineStatus.Status = OperationStatus.OK;
-        //     PipelineStatus.Reason = string.Empty;
-            
-        //     await ExecuteScript(@"./SqlScripts/2_update_campaign_trajectory_point.sql");
-        //     if(PipelineStatus.Status == OperationStatus.OK)
-        //      await ExecuteScript(@"./SqlScripts/3_insert_bi_campaign.sql");//inserts new campaigns into BI db schema
-        //     if(PipelineStatus.Status == OperationStatus.OK)
-        //    await ExecuteScript(@"./SqlScripts/4_insert_bi_campaign_distance_to_sea.sql");
-        //     if(PipelineStatus.Status == OperationStatus.OK)
-        //    await ExecuteScript(@"./SqlScripts/5_insert_bi_trajectory_point_river.sql"); //Pour chaque Trash on récupère la rivière associée et on projete la geometry du trash sur la rivière
-        //     if(PipelineStatus.Status == OperationStatus.OK)
-        //    await ExecuteScript(@"./SqlScripts/6_insert_bi_campaign_river.sql");
-        //     if(PipelineStatus.Status == OperationStatus.OK)
-        //    await ExecuteScript(@"./SqlScripts/7_get_bi_rivers_id.sql");
-        //     if(PipelineStatus.Status == OperationStatus.OK)
-        //    await ExecuteScript(@"./SqlScripts/8_update_bi_trash.sql");
-        //     if(PipelineStatus.Status == OperationStatus.OK)
-        //    await ExecuteScript(@"./SqlScripts/9_insert_bi_trash_river.sql");
-        //     if(PipelineStatus.Status == OperationStatus.OK)
-        //    await ExecuteScript(@"./SqlScripts/10_update_bi_river.sql");
+
+
+            //     var startedOn = DateTime.Now;
+
+            //     //    IList<Guid> newCampaignsIds = await RetrieveNewCampaigns(logger);
+            //     // ********************************* LOCAL TEST ONLY ***********************
+            //     IList<Guid> newCampaignsIds = new List<Guid>();
+            //     newCampaignsIds.Add(new Guid("d115922a-3ca9-49f7-b363-06c9383b6563"));
+            //     newCampaignsIds.Add(new Guid("2155da04-c2bb-433b-9a90-8ec8b8d74ee9"));
+            //     // *************************************************************************
+            //     ListOfCampaignsIds = FormatGuidsForSQL(newCampaignsIds);
+            //     PipelineStatus.Status = OperationStatus.OK;
+            //     PipelineStatus.Reason = string.Empty;
+
+            //     await ExecuteScript(@"./SqlScripts/2_update_campaign_trajectory_point.sql");
+            //     if(PipelineStatus.Status == OperationStatus.OK)
+            //      await ExecuteScript(@"./SqlScripts/3_insert_bi_campaign.sql");//inserts new campaigns into BI db schema
+            //     if(PipelineStatus.Status == OperationStatus.OK)
+            //    await ExecuteScript(@"./SqlScripts/4_insert_bi_campaign_distance_to_sea.sql");
+            //     if(PipelineStatus.Status == OperationStatus.OK)
+            //    await ExecuteScript(@"./SqlScripts/5_insert_bi_trajectory_point_river.sql"); //Pour chaque Trash on récupère la rivière associée et on projete la geometry du trash sur la rivière
+            //     if(PipelineStatus.Status == OperationStatus.OK)
+            //    await ExecuteScript(@"./SqlScripts/6_insert_bi_campaign_river.sql");
+            //     if(PipelineStatus.Status == OperationStatus.OK)
+            //    await ExecuteScript(@"./SqlScripts/7_get_bi_rivers_id.sql");
+            //     if(PipelineStatus.Status == OperationStatus.OK)
+            //    await ExecuteScript(@"./SqlScripts/8_update_bi_trash.sql");
+            //     if(PipelineStatus.Status == OperationStatus.OK)
+            //    await ExecuteScript(@"./SqlScripts/9_insert_bi_trash_river.sql");
+            //     if(PipelineStatus.Status == OperationStatus.OK)
+            //    await ExecuteScript(@"./SqlScripts/10_update_bi_river.sql");
 
             // await CleanErrors(); // on vient clean toutes les campagnes pour ùquelles on a eu un probleme de calcul à un moment
 
@@ -70,44 +74,82 @@ namespace Surfrider.Jobs.Recurring
 
         }
 
+        private static async Task CommitProductionDataAsync(IList<Guid> newCampaignsIds)
+        {
+                                                              
+        }
+
+        private static async Task ComputeOnRiversAsync(IDictionary<Guid, string> RiversToComputeOn)
+        {
+            IRiverPipeline RiverPipeline = new RiverPipeline();
+            foreach (KeyValuePair<Guid, string> RiverToComputeOn in RiversToComputeOn){
+                if(await RiverPipeline.ComputePipelineOnSingleRiverAsync(RiverToComputeOn.Value))
+                    await RiverPipeline.MarkRiverPipelineAsSuccessedAsync(RiverToComputeOn.Key);
+                else
+                    await RiverPipeline.MarkRiverPipelineAsFailedAsync(RiverToComputeOn.Key);
+            }
+        }
+
+        private static async Task<IDictionary<Guid, string>> SelectRiversAsync()
+        {
+            IRiverPipeline RiverPipeline = new RiverPipeline();
+            return await RiverPipeline.RetrieveSuccessfullComputedCampaignsIds();
+        }
+
+        private static async Task ComputeOnCampaignsAsync(IList<Guid> newCampaignsIds)
+        {
+            var startedOn = DateTime.UtcNow;
+            ICampaignPipeline CampaignPipeline = new CampaignPipeline();
+            // TODO boucle à optimiser ( /!\ perf )
+            foreach(var newCampaignId in newCampaignsIds){
+                if (await CampaignPipeline.ComputeOnSingleCampaignAsync(newCampaignId))
+                    await CampaignPipeline.MarkCampaignPipelineAsFailedAsync(newCampaignId);
+                else
+                    await CampaignPipeline.MarkCampaignPipelineAsSuccessedAsync(newCampaignId);
+            }
+        }
+
         private static string FormatGuidsForSQL(IList<Guid> newCampaignsIds)
         {
             var res = "";
-            for(int i = 0; i < newCampaignsIds.Count; i++){
-                
+            for (int i = 0; i < newCampaignsIds.Count; i++)
+            {
+
                 res += "'" + newCampaignsIds[i] + "'";
-                if(i < newCampaignsIds.Count - 1)
+                if (i < newCampaignsIds.Count - 1)
                     res += ",";
             }
             return res;
         }
-
-        private static async Task CleanErrors()
+        private static async Task ExecuteScript(string scriptPath)
         {
-           //
-        }
-
-        private static async Task ExecuteScript(string scriptPath){
             string command = string.Empty;
-            try {
+            try
+            {
                 command = System.IO.File.ReadAllText(scriptPath);
-            }catch(Exception e){
-                Console.WriteLine($"-------------- ERROR READING SQL FILE {scriptPath}");
-                 PipelineStatus.Status = OperationStatus.ERROR;
-                 PipelineStatus.Reason = e.ToString();
             }
-            if(command != string.Empty){
-                try {
+            catch (Exception e)
+            {
+                Console.WriteLine($"-------------- ERROR READING SQL FILE {scriptPath}");
+                PipelineStatus.Status = OperationStatus.ERROR;
+                PipelineStatus.Reason = e.ToString();
+            }
+            if (command != string.Empty)
+            {
+                try
+                {
 
-                command = command.Replace("@campaign_ids", ListOfCampaignsIds);
-                await Database.ExecuteNonQuery(command);
-                }catch(Exception e){
+                    command = command.Replace("@campaign_ids", ListOfCampaignsIds);
+                    await Database.ExecuteNonQuery(command);
+                }
+                catch (Exception e)
+                {
                     Console.WriteLine($"-------------- ERROR DURING SQL FILE EXECUTION {scriptPath}");
                     PipelineStatus.Status = OperationStatus.ERROR;
                     PipelineStatus.Reason = e.ToString();
                 }
             }
-           PipelineStatus.Status = OperationStatus.OK;
+            PipelineStatus.Status = OperationStatus.OK;
 
         }
 
@@ -133,24 +175,24 @@ namespace Surfrider.Jobs.Recurring
             var current_ts = new DateTime(2020, 05, 04);
             var command = $"SELECT id FROM campaign.campaign WHERE createdon >=  '{current_ts}'";
             using (var conn = new NpgsqlConnection(Helper.GetConnectionString()))
+            {
+                conn.Open();
+                using (var cmd = new NpgsqlCommand())
                 {
-                    conn.Open();
-                    using (var cmd = new NpgsqlCommand())
+                    cmd.Connection = conn;
+                    cmd.CommandText = command;
+                    using (var reader = await cmd.ExecuteReaderAsync())
                     {
-                        cmd.Connection = conn;
-                        cmd.CommandText = command;
-                        using (var reader = await cmd.ExecuteReaderAsync())
+
+                        while (reader.Read())
                         {
-                            
-                            while (reader.Read())
-                            {
-                                campaigns.Add(reader.GetFieldValue<Guid>(0));
-                            }
-                            
+                            campaigns.Add(reader.GetFieldValue<Guid>(0));
                         }
+
                     }
                 }
-                
+            }
+
             return campaigns;
         }
     }
