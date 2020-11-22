@@ -5,7 +5,7 @@ using Surfrider.Jobs.Recurring;
 using System;
 using System.IO;
 
-namespace Surfrider_RecurringJobs.Tests
+namespace Surfrider.Jobs_RecurringJobs.Tests
 {
     [TestClass]
     public class UpdateJsonFileWithDataTest

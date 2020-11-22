@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Surfrider.Common.Extensions
+namespace Surfrider.Jobs.Common.Extensions
 {
     public static class DictionaryExtensions
     {

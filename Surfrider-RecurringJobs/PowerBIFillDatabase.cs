@@ -7,7 +7,7 @@ using Npgsql;
 using System.IO;
 using Azure.Storage.Blobs;
 
-namespace Surfrider.Jobs.Recurring
+namespace Surfrider.Jobs
 {
     public static class PowerBIFillDatabase
     {

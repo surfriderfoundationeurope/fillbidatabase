@@ -5,7 +5,7 @@ using System.Data.Common;
 using System.Data.SqlClient;
 using System.Threading.Tasks;
 
-namespace Surfrider {
+namespace Surfrider.Jobs {
     public interface ICampaignPipeline
     {
         Task<bool> ComputeOnSingleCampaignAsync(Guid newCampaignId);

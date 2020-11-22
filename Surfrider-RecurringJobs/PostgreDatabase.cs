@@ -4,7 +4,7 @@ using System.Data.Common;
 using System.Threading.Tasks;
 using Npgsql;
 
-namespace Surfrider
+namespace Surfrider.Jobs
 {
     public class PostgreDatabase : IDatabase
     {
@@ -14,6 +14,40 @@ namespace Surfrider
             this.ConnectionString = connectionString;
         }
 
+        public async Task<ExecutedScriptStatus> ExecuteScript(string scriptPath, IDictionary<string, object> parms)
+        {
+            ExecutedScriptStatus ScriptStatus = new ExecutedScriptStatus();
+            string command = string.Empty;
+            try
+            {
+                command = System.IO.File.ReadAllText(scriptPath);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"-------------- ERROR READING SQL FILE {scriptPath}");
+                ScriptStatus.Status = ScriptStatusEnum.ERROR;
+                ScriptStatus.Reason = e.ToString();
+            }
+            if (command != string.Empty)
+            {
+                try
+                {
+                    foreach(var parm in parms){
+                        command = command.Replace(new String("@" + parm.Key), (string)parm.Value);
+                    }
+                    await ExecuteNonQuery(command);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"-------------- ERROR DURING SQL FILE EXECUTION {scriptPath}");
+                    ScriptStatus.Status = ScriptStatusEnum.ERROR;
+                    ScriptStatus.Reason = e.ToString();
+                }
+            }
+            ScriptStatus.Status = ScriptStatusEnum.OK;
+            return ScriptStatus;
+
+        }
         public async Task<int> ExecuteNonQuery(string query, IDictionary<string, object> args = null)
         {
             using (var conn = new NpgsqlConnection(ConnectionString))
@@ -24,8 +58,10 @@ namespace Surfrider
                     cmd.Connection = conn;
                     query = query.Replace("\r\n", " ").Replace("\r", " ").Replace("\n", " ").Replace("\t", "    ");
                     cmd.CommandText = query;
-                    if(args != null){
-                        foreach(var arg in args){
+                    if (args != null)
+                    {
+                        foreach (var arg in args)
+                        {
                             cmd.Parameters.AddWithValue(arg.Key, arg.Value);
                         }
                     }

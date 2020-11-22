@@ -5,7 +5,7 @@ using System.Data.Common;
 using System.Data.SqlClient;
 using System.Threading.Tasks;
 
-namespace Surfrider {
+namespace Surfrider.Jobs {
     public interface IRiverPipeline
     { 
         // Returns a dictionary of 

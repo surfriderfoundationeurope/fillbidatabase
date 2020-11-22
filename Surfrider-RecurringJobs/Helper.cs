@@ -3,7 +3,7 @@ using Azure.Identity;
 using Azure.Security.KeyVault.Secrets;
 using Microsoft.Extensions.Configuration;
 
-namespace Surfrider {
+namespace Surfrider.Jobs {
 
 public static class Helper {
     // https://docs.microsoft.com/en-us/azure/key-vault/secrets/quick-create-net
