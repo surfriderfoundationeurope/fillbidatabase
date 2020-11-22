@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace Surfrider.Jobs {
     public interface IDatabase
     {
-        Task<bool> ExecuteScript(string scriptPath);
+        Task<ExecutedScriptStatus> ExecuteScript(string scriptPath, IDictionary<string, object> parms)
         Task<int> ExecuteNonQuery(string query, IDictionary<string, object> args = null);
         Task<string> ExecuteStringQuery(string query, IDictionary<string, object> args = null);
     }

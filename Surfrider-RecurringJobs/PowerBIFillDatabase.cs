@@ -121,38 +121,7 @@ namespace Surfrider.Jobs
             }
             return res;
         }
-        private static async Task ExecuteScript(string scriptPath)
-        {
-            string command = string.Empty;
-            try
-            {
-                command = System.IO.File.ReadAllText(scriptPath);
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine($"-------------- ERROR READING SQL FILE {scriptPath}");
-                PipelineStatus.Status = OperationStatus.ERROR;
-                PipelineStatus.Reason = e.ToString();
-            }
-            if (command != string.Empty)
-            {
-                try
-                {
-
-                    command = command.Replace("@campaign_ids", ListOfCampaignsIds);
-                    await Database.ExecuteNonQuery(command);
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine($"-------------- ERROR DURING SQL FILE EXECUTION {scriptPath}");
-                    PipelineStatus.Status = OperationStatus.ERROR;
-                    PipelineStatus.Reason = e.ToString();
-                }
-            }
-            PipelineStatus.Status = OperationStatus.OK;
-
-        }
-
+        
         private static async Task InsertLog(DateTime startedOn, OperationStatus status, ILogger log)
         {
             var finishedOn = DateTime.Now;

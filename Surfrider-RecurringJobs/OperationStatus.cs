@@ -1,4 +1,4 @@
-namespace Surfrider.Jobs.Recurring
+namespace Surfrider.Jobs
 {
     public enum OperationStatus {
         OK = 0,
