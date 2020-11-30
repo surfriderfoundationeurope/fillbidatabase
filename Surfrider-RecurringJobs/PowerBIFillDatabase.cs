@@ -93,7 +93,14 @@ namespace Surfrider.Jobs
         private static async Task<IDictionary<Guid, string>> SelectRiversAsync()
         {
             IRiverPipeline RiverPipeline = new RiverPipeline();
-            return await RiverPipeline.RetrieveSuccessfullComputedCampaignsIds();
+            // 1. On recupere les "id" des rivieres des nouvelles campagnes
+            var RiversIdsFromNewCampaigns = await RiverPipeline.RetrieveSuccessfullComputedCampaignsIds();
+            // 2. On recupere les campaignId des anciennes campaign qui sont concernées par les rivieres des nouvelles campagnes
+            var CampaignIdsFromOldCampaigns = GetOldCampaignsFromRivers(RiversIdsFromNewCampaigns);
+
+            
+            
+
         }
 
         private static async Task ComputeOnCampaignsAsync(IList<Guid> newCampaignsIds)
@@ -102,13 +109,21 @@ namespace Surfrider.Jobs
             ICampaignPipeline CampaignPipeline = new CampaignPipeline();
             // TODO boucle à optimiser ( /!\ perf )
             foreach(var newCampaignId in newCampaignsIds){
-                if (await CampaignPipeline.ComputeOnSingleCampaignAsync(newCampaignId))
+                if (await CampaignPipeline.ComputeOnSingleCampaignAsync(newCampaignId, GetStepsToExecute()))
                     await CampaignPipeline.MarkCampaignPipelineAsFailedAsync(newCampaignId);
                 else
                     await CampaignPipeline.MarkCampaignPipelineAsSuccessedAsync(newCampaignId);
             }
         }
 
+        private static SortedList<int, string> GetStepsToExecute(){
+            SortedList<int, string> SqlSteps = new SortedList<int, string>();
+            SqlSteps.Add(1, @"./SqlScripts/1_update_bi_trajectory_point.sql");
+            SqlSteps.Add(2, @"./SqlScripts/2_insert_bi_campaign.sql");
+            SqlSteps.Add(3, @"./SqlScripts/4_insert_bi_campaign_distance_to_sea.sql");
+            SqlSteps.Add(4, @"./SqlScripts/7_update_bi_trash.sql");
+            return SqlSteps;
+        }
         private static string FormatGuidsForSQL(IList<Guid> newCampaignsIds)
         {
             var res = "";

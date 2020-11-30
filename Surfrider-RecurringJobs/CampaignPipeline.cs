@@ -8,24 +8,24 @@ namespace Surfrider.Jobs
 {
     public class CampaignPipeline : ICampaignPipeline
     {
-        public async Task<bool> ComputeOnSingleCampaignAsync(Guid newCampaignId)
+        public async Task<bool> ComputeOnSingleCampaignAsync(Guid newCampaignId, SortedList<int, string> sqlSteps)
         {
-            PipelineStatus PipelineStatus = new PipelineStatus();
+            PipelineStatus PipelineStatus = new PipelineStatus{
+                Status = OperationStatus.OK,
+                Reason = string.Empty
+            };
+
             IDatabase Database = new PostgreDatabase(Helper.GetConnectionString());
 
-            PipelineStatus.Status = OperationStatus.OK;
-            PipelineStatus.Reason = string.Empty;
             IDictionary<string, object> Param = new Dictionary<string, object>();
             Param.Add("campaignId", newCampaignId);
 
-            ;
-            if (await Database.ExecuteScript(@"./SqlScripts/1_update_bi_trajectory_point.sql", Param).Result.Status == OperationStatus.OK)
-                await Database.ExecuteScript(@"./SqlScripts/2_insert_bi_campaign.sql", Param);
-            if (PipelineStatus.Status == OperationStatus.OK)
-                await Database.ExecuteScript(@"./SqlScripts/4_insert_bi_campaign_distance_to_sea.sql", Param);
-            if (PipelineStatus.Status == OperationStatus.OK)
-                await Database.ExecuteScript(@"./SqlScripts/7_update_bi_trash.sql", Param); 
-            
+
+            foreach(var SqlStep in sqlSteps){
+            if (await Database.ExecuteScript(SqlStep.Value, Param).ContinueWith(x => x.Result.Status != ScriptStatusEnum.OK))
+                return false;
+            }
+            return true;
         }
 
         public Task MarkCampaignPipelineAsFailedAsync(Guid campaignId)

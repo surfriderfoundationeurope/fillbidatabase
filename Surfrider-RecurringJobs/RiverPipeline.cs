@@ -28,6 +28,7 @@ namespace Surfrider.Jobs
             throw new NotImplementedException();
         }
 
+        /// CALL TO script 6_get_bi_rivers_id.sql
         Task<IDictionary<Guid, string>> IRiverPipeline.RetrieveSuccessfullComputedCampaignsIds()
         {
             throw new NotImplementedException();

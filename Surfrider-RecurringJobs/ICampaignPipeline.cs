@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace Surfrider.Jobs {
     public interface ICampaignPipeline
     {
-        Task<bool> ComputeOnSingleCampaignAsync(Guid newCampaignId);
+        Task<bool> ComputeOnSingleCampaignAsync(Guid newCampaignId, SortedList<int, string> stepsToExecute);
         Task MarkCampaignPipelineAsFailedAsync(Guid campaignId);
         Task MarkCampaignPipelineAsSuccessedAsync(Guid campaignId);
     }
