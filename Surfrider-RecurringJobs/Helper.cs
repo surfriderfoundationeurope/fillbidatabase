@@ -25,6 +25,10 @@ public static class Helper {
             // else
                 return Environment.GetEnvironmentVariable("postgre_connection");
         }
+        public static string GetTestsConnectionString()
+        {
+                return Environment.GetEnvironmentVariable("postgre_connection");
+        }
         public static string GetBlobStorageConnectionString()
         {
             // if (Environment.GetEnvironmentVariable("AZURE_FUNCTIONS_ENVIRONMENT") != "Local")

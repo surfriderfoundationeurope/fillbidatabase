@@ -20,7 +20,6 @@ namespace Surfrider.Jobs
             IDictionary<string, object> Params = new Dictionary<string, object>();
             Params.Add("campaignId", newCampaignId);
 
-
             return await Database.ExecuteScriptsAsync(sqlSteps, Params);
         }
 

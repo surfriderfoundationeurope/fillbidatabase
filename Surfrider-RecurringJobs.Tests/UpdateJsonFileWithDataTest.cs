@@ -4,6 +4,7 @@ using Surfrider;
 using Surfrider.Jobs;
 using System;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace Surfrider.Jobs_RecurringJobs.Tests
 {
@@ -14,7 +15,7 @@ namespace Surfrider.Jobs_RecurringJobs.Tests
         string filename = "data_home_page.json";
 
         [TestMethod]
-        public async void UpdateJsonFileWithData_ContainerAlreadyExists()
+        public async Task UpdateJsonFileWithData_ContainerAlreadyExists()
         {
             string localPath = "./";
             string localFilePath = Path.Combine(localPath, filename);

@@ -92,15 +92,13 @@ namespace Surfrider.Jobs
 
         private static async Task<IDictionary<Guid, string>> SelectRiversAsync()
         {
-            IRiverPipeline RiverPipeline = new RiverPipeline();
-            // 1. On recupere les "id" des rivieres des nouvelles campagnes
-            var RiversIdsFromNewCampaigns = await RiverPipeline.RetrieveSuccessfullComputedCampaignsIds();
-            // 2. On recupere les campaignId des anciennes campaign qui sont concernées par les rivieres des nouvelles campagnes
-            var CampaignIdsFromOldCampaigns = GetOldCampaignsFromRivers(RiversIdsFromNewCampaigns);
+            // IRiverPipeline RiverPipeline = new RiverPipeline();
+            // // 1. On recupere les "id" des rivieres des nouvelles campagnes
+            // var RiversIdsFromNewCampaigns = await RiverPipeline.RetrieveSuccessfullComputedCampaignsIds();
+            // // 2. On recupere les campaignId des anciennes campaign qui sont concernées par les rivieres des nouvelles campagnes
+            // var CampaignIdsFromOldCampaigns = GetOldCampaignsFromRivers(RiversIdsFromNewCampaigns);
 
-            
-            
-
+            throw new NotImplementedException();
         }
 
         private static async Task ComputeOnCampaignsAsync(IList<Guid> newCampaignsIds)
