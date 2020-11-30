@@ -149,7 +149,7 @@ namespace Surfrider.Jobs
             args.Add("@finishedOn", finishedOn);
             args.Add("@elapsedTime", elapsedTime.TotalSeconds);
             args.Add("@status", status.ToString());
-            await Database.ExecuteNonQuery(command, args);
+            await Database.ExecuteNonQueryAsync(command, args);
         }
 
         private static async Task<IList<Guid>> RetrieveNewCampaigns(ILogger log)

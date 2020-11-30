@@ -1,7 +1,7 @@
 using Azure.Storage.Blobs;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Surfrider;
-using Surfrider.Jobs.Recurring;
+using Surfrider.Jobs;
 using System;
 using System.IO;
 

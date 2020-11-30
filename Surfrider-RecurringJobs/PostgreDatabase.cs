@@ -14,7 +14,7 @@ namespace Surfrider.Jobs
             this.ConnectionString = connectionString;
         }
 
-        public async Task<ExecutedScriptStatus> ExecuteScript(string scriptPath, IDictionary<string, object> parms)
+        public async Task<ExecutedScriptStatus> ExecuteScriptAsync(string scriptPath, IDictionary<string, object> parms)
         {
             ExecutedScriptStatus ScriptStatus = new ExecutedScriptStatus();
             string command = string.Empty;
@@ -35,7 +35,7 @@ namespace Surfrider.Jobs
                     foreach(var parm in parms){
                         command = command.Replace(new String("@" + parm.Key), (string)parm.Value);
                     }
-                    await ExecuteNonQuery(command);
+                    await ExecuteNonQueryAsync(command);
                 }
                 catch (Exception e)
                 {
@@ -48,7 +48,7 @@ namespace Surfrider.Jobs
             return ScriptStatus;
 
         }
-        public async Task<int> ExecuteNonQuery(string query, IDictionary<string, object> args = null)
+        public async Task<int> ExecuteNonQueryAsync(string query, IDictionary<string, object> args = null)
         {
             using (var conn = new NpgsqlConnection(ConnectionString))
             {
@@ -90,6 +90,15 @@ namespace Surfrider.Jobs
                 }
             }
             return res;
+        }
+
+        public async Task<bool> ExecuteScriptsAsync(SortedList<int, string> sqlSteps, IDictionary<string, object> parms)
+        {
+            foreach(var SqlStep in sqlSteps){
+            if (await ExecuteScriptAsync(SqlStep.Value, parms).ContinueWith(x => x.Result.Status != ScriptStatusEnum.OK))
+                return false;
+            }
+            return true;
         }
     }
 }

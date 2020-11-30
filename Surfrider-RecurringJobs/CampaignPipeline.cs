@@ -17,15 +17,11 @@ namespace Surfrider.Jobs
 
             IDatabase Database = new PostgreDatabase(Helper.GetConnectionString());
 
-            IDictionary<string, object> Param = new Dictionary<string, object>();
-            Param.Add("campaignId", newCampaignId);
+            IDictionary<string, object> Params = new Dictionary<string, object>();
+            Params.Add("campaignId", newCampaignId);
 
 
-            foreach(var SqlStep in sqlSteps){
-            if (await Database.ExecuteScript(SqlStep.Value, Param).ContinueWith(x => x.Result.Status != ScriptStatusEnum.OK))
-                return false;
-            }
-            return true;
+            return await Database.ExecuteScriptsAsync(sqlSteps, Params);
         }
 
         public Task MarkCampaignPipelineAsFailedAsync(Guid campaignId)
