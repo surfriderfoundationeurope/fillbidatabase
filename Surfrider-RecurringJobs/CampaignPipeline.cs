@@ -23,9 +23,12 @@ namespace Surfrider.Jobs
             return await Database.ExecuteScriptsAsync(sqlSteps, Params);
         }
 
-        public Task MarkCampaignPipelineAsFailedAsync(Guid campaignId)
+        public async Task MarkCampaignPipelineAsFailedAsync(Guid campaignId)
         {
-            throw new NotImplementedException();
+            IDatabase Database = new PostgreDatabase(Helper.GetConnectionString());
+             IDictionary<string, object> Params = new Dictionary<string, object>();
+            Params.Add("campaignId", campaignId);
+            await Database.ExecuteNonQueryAsync("UPDATE bi_temp.pipelines SET campaign_has_been_computed = 1 WHERE campaign_id = @campaignId", Params);
         }
 
         public Task MarkCampaignPipelineAsSuccessedAsync(Guid campaignId)

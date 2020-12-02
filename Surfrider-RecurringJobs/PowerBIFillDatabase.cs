@@ -36,40 +36,6 @@ namespace Surfrider.Jobs
             // 4. COMMIT PROD DATA
             await CommitProductionDataAsync(newCampaignsIds);
 
-
-
-            //     var startedOn = DateTime.Now;
-
-            //     //    IList<Guid> newCampaignsIds = await RetrieveNewCampaigns(logger);
-            //     // ********************************* LOCAL TEST ONLY ***********************
-            //     IList<Guid> newCampaignsIds = new List<Guid>();
-            //     newCampaignsIds.Add(new Guid("d115922a-3ca9-49f7-b363-06c9383b6563"));
-            //     newCampaignsIds.Add(new Guid("2155da04-c2bb-433b-9a90-8ec8b8d74ee9"));
-            //     // *************************************************************************
-            //     ListOfCampaignsIds = FormatGuidsForSQL(newCampaignsIds);
-            //     PipelineStatus.Status = OperationStatus.OK;
-            //     PipelineStatus.Reason = string.Empty;
-
-            //     await ExecuteScript(@"./SqlScripts/2_update_campaign_trajectory_point.sql");
-            //     if(PipelineStatus.Status == OperationStatus.OK)
-            //      await ExecuteScript(@"./SqlScripts/3_insert_bi_campaign.sql");//inserts new campaigns into BI db schema
-            //     if(PipelineStatus.Status == OperationStatus.OK)
-            //    await ExecuteScript(@"./SqlScripts/4_insert_bi_campaign_distance_to_sea.sql");
-            //     if(PipelineStatus.Status == OperationStatus.OK)
-            //    await ExecuteScript(@"./SqlScripts/5_insert_bi_trajectory_point_river.sql"); //Pour chaque Trash on récupère la rivière associée et on projete la geometry du trash sur la rivière
-            //     if(PipelineStatus.Status == OperationStatus.OK)
-            //    await ExecuteScript(@"./SqlScripts/6_insert_bi_campaign_river.sql");
-            //     if(PipelineStatus.Status == OperationStatus.OK)
-            //    await ExecuteScript(@"./SqlScripts/7_get_bi_rivers_id.sql");
-            //     if(PipelineStatus.Status == OperationStatus.OK)
-            //    await ExecuteScript(@"./SqlScripts/8_update_bi_trash.sql");
-            //     if(PipelineStatus.Status == OperationStatus.OK)
-            //    await ExecuteScript(@"./SqlScripts/9_insert_bi_trash_river.sql");
-            //     if(PipelineStatus.Status == OperationStatus.OK)
-            //    await ExecuteScript(@"./SqlScripts/10_update_bi_river.sql");
-
-            // await CleanErrors(); // on vient clean toutes les campagnes pour ùquelles on a eu un probleme de calcul à un moment
-
             Console.WriteLine("-------------------- ALL DONE ---------------------");
 
         }

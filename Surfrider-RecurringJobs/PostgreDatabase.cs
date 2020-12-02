@@ -80,6 +80,13 @@ namespace Surfrider.Jobs
                 {
                     cmd.Connection = conn;
                     cmd.CommandText = query;
+                    if (args != null)
+                    {
+                        foreach (var arg in args)
+                        {
+                            cmd.Parameters.AddWithValue(arg.Key, arg.Value);
+                        }
+                    }
                     using (var reader = await cmd.ExecuteReaderAsync())
                     {
                         while (reader.Read())

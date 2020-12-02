@@ -1,1 +1,1 @@
-SELECT * from campaign.campaign
+DELETE FROM logs.bi WHERE campaign_id = @campaignId

@@ -17,5 +17,9 @@
   <ItemGroup>
     <ProjectReference Include="..\Surfrider-RecurringJobs\Surfrider-RecurringJobs.csproj" />
   </ItemGroup>
-
+  <ItemGroup>
+    <Content Include="TestsScripts\**\*.*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
 </Project>
