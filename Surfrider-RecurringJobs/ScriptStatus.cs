@@ -8,5 +8,7 @@ namespace Surfrider.Jobs
     public class ExecutedScriptStatus {
         public ScriptStatusEnum Status;
         public string Reason;
+        public string Result;
+
     }
 }

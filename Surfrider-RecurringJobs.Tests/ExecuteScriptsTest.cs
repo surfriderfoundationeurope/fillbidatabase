@@ -24,9 +24,8 @@ namespace Surfrider.Jobs_RecurringJobs.Tests
             Params.Add("campaignId", fakeCampaignId.ToString());
 
             Assert.IsTrue(await Database.ExecuteScriptsAsync(GetSuccessfulTestsStepsToExecute(), Params));
-            var res = await Database.ExecuteStringQuery("SELECT * FROM logs.bi WHERE campaign_id = @campaignId", Params);
-            Console.WriteLine(res);
-            Assert.IsNotNull(res);
+            var res = await Database.ExecuteStringQueryAsync("SELECT * FROM bi_temp.pipelines WHERE campaign_id = '@campaignId'", Params);
+            Assert.AreEqual(res, "");
         }
         private SortedList<int, string> GetSuccessfulTestsStepsToExecute()
         {

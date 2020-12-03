@@ -14,7 +14,7 @@ namespace Surfrider.Jobs
             this.ConnectionString = connectionString;
         }
 
-        public async Task<ExecutedScriptStatus> ExecuteScriptAsync(string scriptPath, IDictionary<string, object> parms)
+        public async Task<ExecutedScriptStatus> ExecuteScriptAsync(string scriptPath, IDictionary<string, object> parms = null)
         {
             ExecutedScriptStatus ScriptStatus = new ExecutedScriptStatus();
             string command = string.Empty;
@@ -32,14 +32,14 @@ namespace Surfrider.Jobs
             {
                 try
                 {
-                    foreach(var parm in parms){
-                        command = command.Replace(new String("@" + parm.Key), (string)parm.Value);
-                    }
+                    if(parms != null)
+                        command = ReplaceParamsIntoQuery(command, parms);
                     await ExecuteNonQueryAsync(command);
                 }
                 catch (Exception e)
                 {
                     Console.WriteLine($"-------------- ERROR DURING SQL FILE EXECUTION {scriptPath}");
+                    Console.WriteLine(e.ToString());
                     ScriptStatus.Status = ScriptStatusEnum.ERROR;
                     ScriptStatus.Reason = e.ToString();
                 }
@@ -58,19 +58,16 @@ namespace Surfrider.Jobs
                     cmd.Connection = conn;
                     query = query.Replace("\r\n", " ").Replace("\r", " ").Replace("\n", " ").Replace("\t", "    ");
                     cmd.CommandText = query;
-                    if (args != null)
+                   if (args != null)
                     {
-                        foreach (var arg in args)
-                        {
-                            cmd.Parameters.AddWithValue(arg.Key, arg.Value);
-                        }
+                        cmd.CommandText = ReplaceParamsIntoQuery(cmd.CommandText, args);
                     }
                     return await cmd.ExecuteNonQueryAsync();
                 }
             }
         }
 
-        public async Task<string> ExecuteStringQuery(string query, IDictionary<string, object> args = null)
+        public async Task<string> ExecuteStringQueryAsync(string query, IDictionary<string, object> args = null)
         {
             string res = string.Empty;
             using (var conn = new NpgsqlConnection(ConnectionString))
@@ -82,16 +79,16 @@ namespace Surfrider.Jobs
                     cmd.CommandText = query;
                     if (args != null)
                     {
-                        foreach (var arg in args)
-                        {
-                            cmd.Parameters.AddWithValue(arg.Key, arg.Value);
-                        }
+                        cmd.CommandText = ReplaceParamsIntoQuery(cmd.CommandText, args);
                     }
                     using (var reader = await cmd.ExecuteReaderAsync())
                     {
                         while (reader.Read())
                         {
-                            res += reader.GetString(0);
+                            // je suis pas fier de ça mais bon, a defaut d'avoir une meilleure solution...
+                            var dataType = reader.GetDataTypeName(0);
+                            if(dataType == "uuid")
+                                res += reader.GetGuid(0);
                         }
                     }
                 }
@@ -101,11 +98,20 @@ namespace Surfrider.Jobs
 
         public async Task<bool> ExecuteScriptsAsync(SortedList<int, string> sqlSteps, IDictionary<string, object> parms)
         {
-            foreach(var SqlStep in sqlSteps){
-            if (await ExecuteScriptAsync(SqlStep.Value, parms).ContinueWith(x => x.Result.Status != ScriptStatusEnum.OK))
-                return false;
+            foreach (var SqlStep in sqlSteps)
+            {
+                if (await ExecuteScriptAsync(SqlStep.Value, parms).ContinueWith(x => x.Result.Status != ScriptStatusEnum.OK))
+                    return false;
             }
             return true;
+        }
+        private string ReplaceParamsIntoQuery(string command, IDictionary<string, object> parms)
+        {
+            foreach (var parm in parms)
+            {
+                command = command.Replace(new String("@" + parm.Key), (string)parm.Value);
+            }
+            return command;
         }
     }
 }
