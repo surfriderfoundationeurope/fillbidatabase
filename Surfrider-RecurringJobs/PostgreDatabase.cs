@@ -14,7 +14,7 @@ namespace Surfrider.Jobs
             this.ConnectionString = connectionString;
         }
 
-        public async Task<ExecutedScriptStatus> ExecuteScriptAsync(string scriptPath, IDictionary<string, object> parms = null)
+        public async Task<ExecutedScriptStatus> ExecuteScriptAsync(string scriptPath, IDictionary<string, string> parms = null)
         {
             ExecutedScriptStatus ScriptStatus = new ExecutedScriptStatus();
             string command = string.Empty;
@@ -32,7 +32,7 @@ namespace Surfrider.Jobs
             {
                 try
                 {
-                    if(parms != null)
+                    if (parms != null)
                         command = ReplaceParamsIntoQuery(command, parms);
                     await ExecuteNonQueryAsync(command);
                 }
@@ -48,26 +48,34 @@ namespace Surfrider.Jobs
             return ScriptStatus;
 
         }
-        public async Task<int> ExecuteNonQueryAsync(string query, IDictionary<string, object> args = null)
+        public async Task<int> ExecuteNonQueryAsync(string query, IDictionary<string, string> args = null)
         {
-            using (var conn = new NpgsqlConnection(ConnectionString))
+            try
             {
-                conn.Open();
-                using (var cmd = new NpgsqlCommand())
+                using (var conn = new NpgsqlConnection(ConnectionString))
                 {
-                    cmd.Connection = conn;
-                    query = query.Replace("\r\n", " ").Replace("\r", " ").Replace("\n", " ").Replace("\t", "    ");
-                    cmd.CommandText = query;
-                   if (args != null)
+                    conn.Open();
+                    using (var cmd = new NpgsqlCommand())
                     {
-                        cmd.CommandText = ReplaceParamsIntoQuery(cmd.CommandText, args);
+                        cmd.Connection = conn;
+                        query = query.Replace("\r\n", " ").Replace("\r", " ").Replace("\n", " ").Replace("\t", "    ");
+                        cmd.CommandText = query;
+                        if (args != null)
+                        {
+                            cmd.CommandText = ReplaceParamsIntoQuery(cmd.CommandText, args);
+                        }
+                        return await cmd.ExecuteNonQueryAsync();
                     }
-                    return await cmd.ExecuteNonQueryAsync();
                 }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.ToString());
+                return -1;
             }
         }
 
-        public async Task<string> ExecuteStringQueryAsync(string query, IDictionary<string, object> args = null)
+        public async Task<string> ExecuteStringQueryAsync(string query, IDictionary<string, string> args = null)
         {
             string res = string.Empty;
             using (var conn = new NpgsqlConnection(ConnectionString))
@@ -87,16 +95,25 @@ namespace Surfrider.Jobs
                         {
                             // je suis pas fier de ça mais bon, a defaut d'avoir une meilleure solution...
                             var dataType = reader.GetDataTypeName(0);
-                            if(dataType == "uuid")
-                                res += reader.GetGuid(0);
+
+                            var value = reader.GetValue(0);
+
+                            if (value == DBNull.Value)
+                                res += "";
+                            else {
+                                if (dataType == "uuid")
+                                    res += reader.GetGuid(0).ToString();
+                                if (dataType == "boolean")
+                                    res += reader.GetBoolean(0).ToString();// returns "False" or "True"
+                            }
                         }
                     }
                 }
             }
-            return res;
+            return res.ToString();
         }
 
-        public async Task<bool> ExecuteScriptsAsync(SortedList<int, string> sqlSteps, IDictionary<string, object> parms)
+        public async Task<bool> ExecuteScriptsAsync(SortedList<int, string> sqlSteps, IDictionary<string, string> parms)
         {
             foreach (var SqlStep in sqlSteps)
             {
@@ -105,11 +122,11 @@ namespace Surfrider.Jobs
             }
             return true;
         }
-        private string ReplaceParamsIntoQuery(string command, IDictionary<string, object> parms)
+        private string ReplaceParamsIntoQuery(string command, IDictionary<string, string> parms)
         {
             foreach (var parm in parms)
             {
-                command = command.Replace(new String("@" + parm.Key), (string)parm.Value);
+                command = command.Replace(new String("@" + parm.Key), parm.Value);
             }
             return command;
         }

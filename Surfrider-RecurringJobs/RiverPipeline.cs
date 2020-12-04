@@ -8,6 +8,8 @@ namespace Surfrider.Jobs
 {
     public class RiverPipeline : IRiverPipeline
     {
+        public string DatabaseConnection { get; }
+        public RiverPipeline(string dbConnectionString) => this.DatabaseConnection = dbConnectionString;
         public Task<bool> ComputePipelineOnSingleRiverAsync(string riverId)
         {
             throw new NotImplementedException();

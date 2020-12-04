@@ -47,7 +47,7 @@ namespace Surfrider.Jobs
 
         private static async Task ComputeOnRiversAsync(IDictionary<Guid, string> RiversToComputeOn)
         {
-            IRiverPipeline RiverPipeline = new RiverPipeline();
+            IRiverPipeline RiverPipeline = new RiverPipeline(Helper.GetConnectionString());
             foreach (KeyValuePair<Guid, string> RiverToComputeOn in RiversToComputeOn){
                 if(await RiverPipeline.ComputePipelineOnSingleRiverAsync(RiverToComputeOn.Value))
                     await RiverPipeline.MarkRiverPipelineAsSuccessedAsync(RiverToComputeOn.Key);
@@ -70,7 +70,7 @@ namespace Surfrider.Jobs
         private static async Task ComputeOnCampaignsAsync(IList<Guid> newCampaignsIds)
         {
             var startedOn = DateTime.UtcNow;
-            ICampaignPipeline CampaignPipeline = new CampaignPipeline();
+            ICampaignPipeline CampaignPipeline = new CampaignPipeline(Helper.GetConnectionString());
             // TODO boucle à optimiser ( /!\ perf )
             foreach(var newCampaignId in newCampaignsIds){
                 if (await CampaignPipeline.ComputeOnSingleCampaignAsync(newCampaignId, GetStepsToExecute()))
@@ -107,11 +107,11 @@ namespace Surfrider.Jobs
             var elapsedTime = finishedOn - startedOn;
             // see https://stackoverflow.com/a/23163325/12805412 
             var command = $"INSERT INTO bi.Logs VALUES (@id, @startedOn, @finishedOn, @elapsedTime, @status)";
-            IDictionary<string, object> args = new Dictionary<string, object>();
-            args.Add("@id", Guid.NewGuid());
-            args.Add("@startedOn", startedOn);
-            args.Add("@finishedOn", finishedOn);
-            args.Add("@elapsedTime", elapsedTime.TotalSeconds);
+            IDictionary<string, string> args = new Dictionary<string, string>();
+            args.Add("@id", Guid.NewGuid().ToString());
+            args.Add("@startedOn", startedOn.ToString());
+            args.Add("@finishedOn", finishedOn.ToString());
+            args.Add("@elapsedTime", elapsedTime.TotalSeconds.ToString());
             args.Add("@status", status.ToString());
             await Database.ExecuteNonQueryAsync(command, args);
         }

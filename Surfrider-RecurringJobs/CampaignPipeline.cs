@@ -8,32 +8,42 @@ namespace Surfrider.Jobs
 {
     public class CampaignPipeline : ICampaignPipeline
     {
+        string ConnectionString;
+        public CampaignPipeline(string connectionString)
+        {
+            this.ConnectionString = connectionString;
+        }
+
         public async Task<bool> ComputeOnSingleCampaignAsync(Guid newCampaignId, SortedList<int, string> sqlSteps)
         {
-            PipelineStatus PipelineStatus = new PipelineStatus{
+            PipelineStatus PipelineStatus = new PipelineStatus
+            {
                 Status = OperationStatus.OK,
                 Reason = string.Empty
             };
 
-            IDatabase Database = new PostgreDatabase(Helper.GetConnectionString());
+            IDatabase Database = new PostgreDatabase(ConnectionString);
 
-            IDictionary<string, object> Params = new Dictionary<string, object>();
-            Params.Add("campaignId", newCampaignId);
+            IDictionary<string, string> Params = new Dictionary<string, string>();
+            Params.Add("campaignId", newCampaignId.ToString());
 
             return await Database.ExecuteScriptsAsync(sqlSteps, Params);
         }
 
         public async Task MarkCampaignPipelineAsFailedAsync(Guid campaignId)
         {
-            IDatabase Database = new PostgreDatabase(Helper.GetConnectionString());
-             IDictionary<string, object> Params = new Dictionary<string, object>();
-            Params.Add("campaignId", campaignId);
-            await Database.ExecuteNonQueryAsync("UPDATE bi_temp.pipelines SET campaign_has_been_computed = 1 WHERE campaign_id = @campaignId", Params);
+            IDatabase Database = new PostgreDatabase(ConnectionString);
+            IDictionary<string, string> Params = new Dictionary<string, string>();
+            Params.Add("campaignId", campaignId.ToString());
+            await Database.ExecuteNonQueryAsync("UPDATE bi_temp.pipelines SET campaign_has_been_computed = FALSE WHERE campaign_id = '@campaignId'", Params);
         }
 
-        public Task MarkCampaignPipelineAsSuccessedAsync(Guid campaignId)
+        public async Task MarkCampaignPipelineAsSuccessedAsync(Guid campaignId)
         {
-            throw new NotImplementedException();
+            IDatabase Database = new PostgreDatabase(ConnectionString);
+            IDictionary<string, string> Params = new Dictionary<string, string>();
+            Params.Add("campaignId", campaignId.ToString());
+            await Database.ExecuteNonQueryAsync("UPDATE bi_temp.pipelines SET campaign_has_been_computed = TRUE WHERE campaign_id = '@campaignId'", Params);
         }
     }
 }
