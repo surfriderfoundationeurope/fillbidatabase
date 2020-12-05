@@ -5,12 +5,13 @@ using Surfrider.Jobs;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Surfrider.Jobs_RecurringJobs.Tests
 {
     [TestClass]
-    public class ExecuteScriptsTests
+    public class CampaignPipelinesTest
     {
         
         [TestMethod]
@@ -24,8 +25,8 @@ namespace Surfrider.Jobs_RecurringJobs.Tests
             Params.Add("campaignId", fakeCampaignId.ToString());
 
             Assert.IsTrue(await Database.ExecuteScriptsAsync(GetSuccessfulTestsStepsToExecute(), Params));
-            var res = await Database.ExecuteStringQueryAsync("SELECT * FROM bi_temp.pipelines WHERE campaign_id = '@campaignId'", Params);
-            Assert.AreEqual(res, "");
+            var shouldBeEmpty = await Database.ExecuteStringQueryAsync("SELECT * FROM bi_temp.pipelines WHERE campaign_id = '@campaignId'", Params);
+            Assert.AreEqual(0, shouldBeEmpty.Count);
         }
         [TestMethod]
         public async Task MarkCampaignPipelineAsFailedAsync_SUCCESS()
@@ -41,13 +42,13 @@ namespace Surfrider.Jobs_RecurringJobs.Tests
             await Database.ExecuteScriptAsync(@"./TestsScripts/1_add_fake_campaign.sql", Params);
             // check the entry is null so far
             var shouldBeEmpty = await Database.ExecuteStringQueryAsync("SELECT campaign_has_been_computed FROM bi_temp.pipelines WHERE campaign_id = '@campaignId'", Params);
-            Assert.AreEqual(shouldBeEmpty, "");
+            Assert.AreEqual(0, shouldBeEmpty.Count);
             
             // run the method we test
             ICampaignPipeline pipeline = new CampaignPipeline(GetTestsConnectionString());
             await pipeline.MarkCampaignPipelineAsFailedAsync(fakeCampaignId);
             var shouldBeFalse = await Database.ExecuteStringQueryAsync("SELECT campaign_has_been_computed FROM bi_temp.pipelines WHERE campaign_id = '@campaignId'", Params);
-            Assert.AreEqual(shouldBeFalse, "False");
+            Assert.AreEqual("false", shouldBeFalse.First().ToLowerInvariant());
 
             // remove the added campaign
             await Database.ExecuteScriptAsync(@"./TestsScripts/2_remove_fake_campaign.sql", Params);
@@ -66,13 +67,13 @@ namespace Surfrider.Jobs_RecurringJobs.Tests
             await Database.ExecuteScriptAsync(@"./TestsScripts/1_add_fake_campaign.sql", Params);
             // check the entry is null so far
             var shouldBeEmpty = await Database.ExecuteStringQueryAsync("SELECT campaign_has_been_computed FROM bi_temp.pipelines WHERE campaign_id = '@campaignId'", Params);
-            Assert.AreEqual(shouldBeEmpty, "");
+            Assert.AreEqual(0, shouldBeEmpty.Count);
             
             // run the method we test
             ICampaignPipeline pipeline = new CampaignPipeline(GetTestsConnectionString());
             await pipeline.MarkCampaignPipelineAsSuccessedAsync(fakeCampaignId);
             var shouldBeFalse = await Database.ExecuteStringQueryAsync("SELECT campaign_has_been_computed FROM bi_temp.pipelines WHERE campaign_id = '@campaignId'", Params);
-            Assert.AreEqual(shouldBeFalse, "True");
+            Assert.AreEqual("true", shouldBeFalse.First().ToLowerInvariant());
 
             // remove the added campaign
             await Database.ExecuteScriptAsync(@"./TestsScripts/2_remove_fake_campaign.sql", Params);
@@ -86,7 +87,7 @@ namespace Surfrider.Jobs_RecurringJobs.Tests
             SqlSteps.Add(2, @"./TestsScripts/2_remove_fake_campaign.sql");
             return SqlSteps;
         }
-        public static string GetTestsConnectionString()
+        private string GetTestsConnectionString()
         {
                 return "Server=test-pgdb.postgres.database.azure.com;Database=surfriderdb;Port=5432;User Id=testpgdbrootuser@test-pgdb;Password=LePlastiqueCaPiqueBeaucoup!;Ssl Mode=Require;";
         }

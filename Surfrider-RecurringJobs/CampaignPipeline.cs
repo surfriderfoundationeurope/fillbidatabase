@@ -8,11 +8,8 @@ namespace Surfrider.Jobs
 {
     public class CampaignPipeline : ICampaignPipeline
     {
-        string ConnectionString;
-        public CampaignPipeline(string connectionString)
-        {
-            this.ConnectionString = connectionString;
-        }
+        string DatabaseConnection  { get; }
+        public CampaignPipeline(string connectionString) => this.DatabaseConnection = connectionString;
 
         public async Task<bool> ComputeOnSingleCampaignAsync(Guid newCampaignId, SortedList<int, string> sqlSteps)
         {
@@ -22,7 +19,7 @@ namespace Surfrider.Jobs
                 Reason = string.Empty
             };
 
-            IDatabase Database = new PostgreDatabase(ConnectionString);
+            IDatabase Database = new PostgreDatabase(DatabaseConnection);
 
             IDictionary<string, string> Params = new Dictionary<string, string>();
             Params.Add("campaignId", newCampaignId.ToString());
@@ -32,7 +29,7 @@ namespace Surfrider.Jobs
 
         public async Task MarkCampaignPipelineAsFailedAsync(Guid campaignId)
         {
-            IDatabase Database = new PostgreDatabase(ConnectionString);
+            IDatabase Database = new PostgreDatabase(DatabaseConnection);
             IDictionary<string, string> Params = new Dictionary<string, string>();
             Params.Add("campaignId", campaignId.ToString());
             await Database.ExecuteNonQueryAsync("UPDATE bi_temp.pipelines SET campaign_has_been_computed = FALSE WHERE campaign_id = '@campaignId'", Params);
@@ -40,7 +37,7 @@ namespace Surfrider.Jobs
 
         public async Task MarkCampaignPipelineAsSuccessedAsync(Guid campaignId)
         {
-            IDatabase Database = new PostgreDatabase(ConnectionString);
+            IDatabase Database = new PostgreDatabase(DatabaseConnection);
             IDictionary<string, string> Params = new Dictionary<string, string>();
             Params.Add("campaignId", campaignId.ToString());
             await Database.ExecuteNonQueryAsync("UPDATE bi_temp.pipelines SET campaign_has_been_computed = TRUE WHERE campaign_id = '@campaignId'", Params);

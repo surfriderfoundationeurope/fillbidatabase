@@ -15,18 +15,27 @@ namespace Surfrider.Jobs
             throw new NotImplementedException();
         }
 
-        public Task MarkRiverPipelineAsFailedAsync(object key)
+        public async Task MarkRiverPipelineAsFailedAsync(Guid campaignId)
         {
-            throw new NotImplementedException();
+            IDatabase Database = new PostgreDatabase(DatabaseConnection);
+            IDictionary<string, string> Params = new Dictionary<string, string>();
+            Params.Add("campaignId", campaignId.ToString());
+            await Database.ExecuteNonQueryAsync("UPDATE bi_temp.pipelines SET river_has_been_computed = FALSE WHERE campaign_id = '@campaignId'", Params);
         }
 
-        public Task MarkRiverPipelineAsSuccessedAsync(object key)
+        public async Task MarkRiverPipelineAsSuccessedAsync(Guid campaignId)
         {
-            throw new NotImplementedException();
+            IDatabase Database = new PostgreDatabase(DatabaseConnection);
+            IDictionary<string, string> Params = new Dictionary<string, string>();
+            Params.Add("campaignId", campaignId.ToString());
+            await Database.ExecuteNonQueryAsync("UPDATE bi_temp.pipelines SET river_has_been_computed = TRUE WHERE campaign_id = '@campaignId'", Params);
         }
 
-        public Task<IList<Guid>> RetrieveSuccessfullComputedCampaignsIds()
+        public async Task<IList<Guid>> RetrieveSuccessfullComputedCampaignsIdsAsync()
         {
+            // IDatabase Database = new PostgreDatabase(DatabaseConnection);
+            // IDictionary<string, string> Params = new Dictionary<string, string>();
+            // var campaignsIds = await Database.ExecuteStringQueryAsync("SELECT campaign_id FROM bi_temp.pipelines WHERE campaign_has_been_computed = TRUE", Params);
             throw new NotImplementedException();
         }
 

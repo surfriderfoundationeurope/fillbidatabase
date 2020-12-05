@@ -14,8 +14,8 @@ namespace Surfrider.Jobs {
         // the campaign has been made on.
         Task<IDictionary<Guid, string>> RetrieveSuccessfullComputedCampaignsIds();
         Task<bool> ComputePipelineOnSingleRiverAsync(string riverId);
-        Task MarkRiverPipelineAsSuccessedAsync(object key);
-        Task MarkRiverPipelineAsFailedAsync(object key);
+        Task MarkRiverPipelineAsSuccessedAsync(Guid campaignId);
+        Task MarkRiverPipelineAsFailedAsync(Guid campaignId);
     }
 
 }

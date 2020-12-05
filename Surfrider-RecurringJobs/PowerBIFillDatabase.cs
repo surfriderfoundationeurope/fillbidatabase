@@ -42,7 +42,7 @@ namespace Surfrider.Jobs
 
         private static async Task CommitProductionDataAsync(IList<Guid> newCampaignsIds)
         {
-                                                              
+              // si dans le pipeline, la cmapaign et la river ont été bien computed, alors on copie les données pour ces campaign là                                                
         }
 
         private static async Task ComputeOnRiversAsync(IDictionary<Guid, string> RiversToComputeOn)
@@ -79,7 +79,6 @@ namespace Surfrider.Jobs
                     await CampaignPipeline.MarkCampaignPipelineAsSuccessedAsync(newCampaignId);
             }
         }
-
         private static SortedList<int, string> GetStepsToExecute(){
             SortedList<int, string> SqlSteps = new SortedList<int, string>();
             SqlSteps.Add(1, @"./SqlScripts/1_update_bi_trajectory_point.sql");
@@ -100,7 +99,6 @@ namespace Surfrider.Jobs
             }
             return res;
         }
-        
         private static async Task InsertLog(DateTime startedOn, OperationStatus status, ILogger log)
         {
             var finishedOn = DateTime.Now;
@@ -115,7 +113,6 @@ namespace Surfrider.Jobs
             args.Add("@status", status.ToString());
             await Database.ExecuteNonQueryAsync(command, args);
         }
-
         private static async Task<IList<Guid>> RetrieveNewCampaigns(ILogger log)
         {
 

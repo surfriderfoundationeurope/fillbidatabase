@@ -75,9 +75,10 @@ namespace Surfrider.Jobs
             }
         }
 
-        public async Task<string> ExecuteStringQueryAsync(string query, IDictionary<string, string> args = null)
+        // Retrieves only the first column of the results
+        public async Task<IList<string>> ExecuteStringQueryAsync(string query, IDictionary<string, string> args = null)
         {
-            string res = string.Empty;
+            IList<string> res = new List<string>();
             using (var conn = new NpgsqlConnection(ConnectionString))
             {
                 conn.Open();
@@ -99,18 +100,18 @@ namespace Surfrider.Jobs
                             var value = reader.GetValue(0);
 
                             if (value == DBNull.Value)
-                                res += "";
+                                return res;
                             else {
                                 if (dataType == "uuid")
-                                    res += reader.GetGuid(0).ToString();
+                                    res.Add(reader.GetGuid(0).ToString());
                                 if (dataType == "boolean")
-                                    res += reader.GetBoolean(0).ToString();// returns "False" or "True"
+                                    res.Add(reader.GetBoolean(0).ToString());// returns "False" or "True"
                             }
                         }
                     }
                 }
             }
-            return res.ToString();
+            return res;
         }
 
         public async Task<bool> ExecuteScriptsAsync(SortedList<int, string> sqlSteps, IDictionary<string, string> parms)
