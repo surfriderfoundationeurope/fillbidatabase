@@ -14,7 +14,7 @@ namespace Surfrider.Jobs
             this.ConnectionString = connectionString;
         }
 
-        public async Task<ExecutedScriptStatus> ExecuteScriptAsync(string scriptPath, IDictionary<string, string> parms = null)
+        public async Task<ExecutedScriptStatus> ExecuteNonQueryScriptAsync(string scriptPath, IDictionary<string, string> parms = null)
         {
             ExecutedScriptStatus ScriptStatus = new ExecutedScriptStatus();
             string command = string.Empty;
@@ -34,7 +34,45 @@ namespace Surfrider.Jobs
                 {
                     if (parms != null)
                         command = ReplaceParamsIntoQuery(command, parms);
+                    
+                    command = command.Replace("\r\n", " ").Replace("\r", " ").Replace("\n", " ").Replace("\t", "    ");
                     await ExecuteNonQueryAsync(command);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"-------------- ERROR DURING SQL FILE EXECUTION {scriptPath}");
+                    Console.WriteLine(e.ToString());
+                    ScriptStatus.Status = ScriptStatusEnum.ERROR;
+                    ScriptStatus.Reason = e.ToString();
+                }
+            }
+            ScriptStatus.Status = ScriptStatusEnum.OK;
+            return ScriptStatus;
+
+        }
+        public async Task<ExecutedScriptStatus> ExecuteQueryScriptAsync(string scriptPath, IDictionary<string, string> parms = null)
+        {
+            ExecutedScriptStatus ScriptStatus = new ExecutedScriptStatus();
+            string command = string.Empty;
+            try
+            {
+                command = System.IO.File.ReadAllText(scriptPath);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"-------------- ERROR READING SQL FILE {scriptPath}");
+                ScriptStatus.Status = ScriptStatusEnum.ERROR;
+                ScriptStatus.Reason = e.ToString();
+            }
+            if (command != string.Empty)
+            {
+                try
+                {
+                    if (parms != null)
+                        command = ReplaceParamsIntoQuery(command, parms);
+                    
+                    command = command.Replace("\r\n", " ").Replace("\r", " ").Replace("\n", " ").Replace("\t", "    ");
+                    ScriptStatus.Result = (IList<string>) await ExecuteStringQueryAsync(command, parms);
                 }
                 catch (Exception e)
                 {
@@ -118,7 +156,7 @@ namespace Surfrider.Jobs
         {
             foreach (var SqlStep in sqlSteps)
             {
-                if (await ExecuteScriptAsync(SqlStep.Value, parms).ContinueWith(x => x.Result.Status != ScriptStatusEnum.OK))
+                if (await ExecuteNonQueryScriptAsync(SqlStep.Value, parms).ContinueWith(x => x.Result.Status != ScriptStatusEnum.OK))
                     return false;
             }
             return true;

@@ -39,7 +39,7 @@ namespace Surfrider.Jobs_RecurringJobs.Tests
             Params.Add("campaignId", fakeCampaignId.ToString());
 
             // adds a new pipeline entry
-            await Database.ExecuteScriptAsync(@"./TestsScripts/1_add_fake_campaign.sql", Params);
+            await Database.ExecuteNonQueryScriptAsync(@"./TestsScripts/1_add_fake_campaign.sql", Params);
             // check the entry is null so far
             var shouldBeEmpty = await Database.ExecuteStringQueryAsync("SELECT campaign_has_been_computed FROM bi_temp.pipelines WHERE campaign_id = '@campaignId'", Params);
             Assert.AreEqual(0, shouldBeEmpty.Count);
@@ -51,7 +51,7 @@ namespace Surfrider.Jobs_RecurringJobs.Tests
             Assert.AreEqual("false", shouldBeFalse.First().ToLowerInvariant());
 
             // remove the added campaign
-            await Database.ExecuteScriptAsync(@"./TestsScripts/2_remove_fake_campaign.sql", Params);
+            await Database.ExecuteNonQueryScriptAsync(@"./TestsScripts/2_remove_fake_campaign.sql", Params);
         }
         [TestMethod]
         public async Task MarkCampaignPipelineAsSucccessedAsync_SUCCESS()
@@ -64,7 +64,7 @@ namespace Surfrider.Jobs_RecurringJobs.Tests
             Params.Add("campaignId", fakeCampaignId.ToString());
 
             // adds a new pipeline entry
-            await Database.ExecuteScriptAsync(@"./TestsScripts/1_add_fake_campaign.sql", Params);
+            await Database.ExecuteNonQueryScriptAsync(@"./TestsScripts/1_add_fake_campaign.sql", Params);
             // check the entry is null so far
             var shouldBeEmpty = await Database.ExecuteStringQueryAsync("SELECT campaign_has_been_computed FROM bi_temp.pipelines WHERE campaign_id = '@campaignId'", Params);
             Assert.AreEqual(0, shouldBeEmpty.Count);
@@ -76,7 +76,7 @@ namespace Surfrider.Jobs_RecurringJobs.Tests
             Assert.AreEqual("true", shouldBeFalse.First().ToLowerInvariant());
 
             // remove the added campaign
-            await Database.ExecuteScriptAsync(@"./TestsScripts/2_remove_fake_campaign.sql", Params);
+            await Database.ExecuteNonQueryScriptAsync(@"./TestsScripts/2_remove_fake_campaign.sql", Params);
         }
 
 

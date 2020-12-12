@@ -30,7 +30,7 @@ namespace Surfrider.Jobs
             // 1. COMPUTE ON CAMPAIGNS
             await ComputeOnCampaignsAsync(newCampaignsIds);
             // 2. SELECT RIVERS NAME
-            IDictionary<Guid, string> RiversToComputeOn = await SelectRiversAsync();
+            IDictionary<Guid, string> RiversToComputeOn = await SelectRiversAsync(newCampaignsIds);
             // 3. COMPUTE ON RIVERS
             await ComputeOnRiversAsync(RiversToComputeOn);
             // 4. COMMIT PROD DATA
@@ -42,6 +42,7 @@ namespace Surfrider.Jobs
 
         private static async Task CommitProductionDataAsync(IList<Guid> newCampaignsIds)
         {
+            throw new NotImplementedException();
               // si dans le pipeline, la cmapaign et la river ont été bien computed, alors on copie les données pour ces campaign là                                                
         }
 
@@ -56,11 +57,11 @@ namespace Surfrider.Jobs
             }
         }
 
-        private static async Task<IDictionary<Guid, string>> SelectRiversAsync()
+        private static async Task<IDictionary<Guid, string>> SelectRiversAsync(IList<Guid> newCampaignsIds)
         {
-            // IRiverPipeline RiverPipeline = new RiverPipeline();
+            // IRiverPipeline RiverPipeline = new RiverPipeline(Helper.GetConnectionString());
             // // 1. On recupere les "id" des rivieres des nouvelles campagnes
-            // var RiversIdsFromNewCampaigns = await RiverPipeline.RetrieveSuccessfullComputedCampaignsIds();
+            // var RiversIdsFromNewCampaigns = await RiverPipeline.RetrieveSuccessfullComputedCampaignsRiversAsync(newCampaignsIds);
             // // 2. On recupere les campaignId des anciennes campaign qui sont concernées par les rivieres des nouvelles campagnes
             // var CampaignIdsFromOldCampaigns = GetOldCampaignsFromRivers(RiversIdsFromNewCampaigns);
 
