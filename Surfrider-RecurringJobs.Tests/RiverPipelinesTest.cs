@@ -94,6 +94,17 @@ namespace Surfrider.Jobs_RecurringJobs.Tests
             }
         }
         [TestMethod]
+        public async Task MarkRiverPipelineAsFailedAsync_CampaignPipelineDoesntExist()
+        {
+             Console.WriteLine("USING " + GetTestsConnectionString());
+            IRiverPipeline riverPipeline = new RiverPipeline(GetTestsConnectionString());
+
+            IDatabase Database = new PostgreDatabase(GetTestsConnectionString());
+           
+            Assert..await riverPipeline.MarkRiverPipelineAsFailedAsync(new Guid(campaignId));
+           
+        }
+        [TestMethod]
         public async Task MarkRiverPipelineAsSuccessedAsync_SUCCESS()
         {
             Console.WriteLine("USING " + GetTestsConnectionString());

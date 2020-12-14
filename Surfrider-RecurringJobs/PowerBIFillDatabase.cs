@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
 using System.Threading.Tasks;
@@ -29,7 +30,7 @@ namespace Surfrider.Jobs
             IList<Guid> newCampaignsIds = await RetrieveNewCampaigns(logger);
             // 1. COMPUTE ON CAMPAIGNS
             await ComputeOnCampaignsAsync(newCampaignsIds);
-            // 2. SELECT RIVERS NAME
+            // 2. SELECT RIVERS NAME 
             IDictionary<Guid, string> RiversToComputeOn = await SelectRiversAsync(newCampaignsIds);
             // 3. COMPUTE ON RIVERS
             await ComputeOnRiversAsync(RiversToComputeOn);
@@ -57,13 +58,18 @@ namespace Surfrider.Jobs
             }
         }
 
+        // returns a dictionary of {campaignId; riverName}
         private static async Task<IDictionary<Guid, string>> SelectRiversAsync(IList<Guid> newCampaignsIds)
         {
-            // IRiverPipeline RiverPipeline = new RiverPipeline(Helper.GetConnectionString());
-            // // 1. On recupere les "id" des rivieres des nouvelles campagnes
-            // var RiversIdsFromNewCampaigns = await RiverPipeline.RetrieveSuccessfullComputedCampaignsRiversAsync(newCampaignsIds);
-            // // 2. On recupere les campaignId des anciennes campaign qui sont concernées par les rivieres des nouvelles campagnes
-            // var CampaignIdsFromOldCampaigns = GetOldCampaignsFromRivers(RiversIdsFromNewCampaigns);
+            IRiverPipeline RiverPipeline = new RiverPipeline(Helper.GetConnectionString());
+            // 1. On recupere les "id" des rivieres des nouvelles campagnes
+            var RiversIdsFromNewCampaigns = await RiverPipeline.RetrieveSuccessfullComputedCampaignsRiversAsync(newCampaignsIds);
+            // 2. On recupere les campaignId des anciennes campaign qui sont concernées par les rivieres des nouvelles campagnes
+            // on donne donc en entrée la liste des rivieres pour lesquelles il faut recup des campaign
+            // /!\ CA VA POSER PROBLEME
+            // là je suis entrain de mélanger des campaignId qui sont dans la table pipelines, et des campaignId qui
+            // viennent dans la table campaign (qui ont été traitées auparavant)
+            var CampaignIdsFromOldCampaigns = await RiverPipeline.GetOldCampaignsFromRivers(RiversIdsFromNewCampaigns.Select(x => x.Value).ToList<string>());
 
             throw new NotImplementedException();
         }

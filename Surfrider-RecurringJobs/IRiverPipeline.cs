@@ -16,6 +16,7 @@ namespace Surfrider.Jobs {
         Task<bool> ComputePipelineOnSingleRiverAsync(string riverId);
         Task MarkRiverPipelineAsSuccessedAsync(Guid campaignId);
         Task MarkRiverPipelineAsFailedAsync(Guid campaignId);
+        Task<IList<Guid>> GetOldCampaignsFromRivers(IList<string> riversIdsFromNewCampaigns);
     }
 
 }

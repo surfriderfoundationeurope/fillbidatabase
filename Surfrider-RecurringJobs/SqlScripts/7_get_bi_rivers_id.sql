@@ -6,5 +6,6 @@
 SELECT r.name
 FROM bi_temp.campaign_river cr
 inner join bi_temp.river r on r.name = cr.river_name
-WHERE id_ref_campaign_fk = '@campaignId';
+inner join bi_temp.pipelines pp on pp.campaign_id = cr.id_ref_campaign_fk
+WHERE id_ref_campaign_fk = '@campaignId' AND pp.campaign_has_been_computed = TRUE;
 
