@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Surfrider-RecurringJobs", "Surfrider-RecurringJobs.csproj", "{0992D013-93C5-4622-85C0-7EFFF0B42A3A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Surfrider-RecurringJobs", "Surfrider-RecurringJobs\Surfrider-RecurringJobs.csproj", "{0992D013-93C5-4622-85C0-7EFFF0B42A3A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Surfrider-RecurringJobs.Tests", "Surfrider-RecurringJobs.Tests\Surfrider-RecurringJobs.Tests.csproj", "{DDE96E5D-9CD2-434A-BA75-DB55292B1D72}"
 EndProject

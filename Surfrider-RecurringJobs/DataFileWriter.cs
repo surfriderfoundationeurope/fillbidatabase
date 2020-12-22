@@ -3,7 +3,7 @@ using System.IO;
 using System.Threading.Tasks;
 using Azure.Storage.Blobs;
 
-namespace Surfrider.Jobs.Recurring
+namespace Surfrider.Jobs
 {
     public class DataFileWriter : IDataFileWriter
     {

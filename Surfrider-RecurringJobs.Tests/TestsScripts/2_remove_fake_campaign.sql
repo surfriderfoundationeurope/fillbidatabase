@@ -1,0 +1,1 @@
+DELETE FROM bi_temp.pipelines WHERE campaign_id = '@campaignId'

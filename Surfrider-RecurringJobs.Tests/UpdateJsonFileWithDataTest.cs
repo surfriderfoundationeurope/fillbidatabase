@@ -1,11 +1,12 @@
 using Azure.Storage.Blobs;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Surfrider;
-using Surfrider.Jobs.Recurring;
+using Surfrider.Jobs;
 using System;
 using System.IO;
+using System.Threading.Tasks;
 
-namespace Surfrider_RecurringJobs.Tests
+namespace Surfrider.Jobs_RecurringJobs.Tests
 {
     [TestClass]
     public class UpdateJsonFileWithDataTest
@@ -14,7 +15,7 @@ namespace Surfrider_RecurringJobs.Tests
         string filename = "data_home_page.json";
 
         [TestMethod]
-        public async void UpdateJsonFileWithData_ContainerAlreadyExists()
+        public async Task UpdateJsonFileWithData_ContainerAlreadyExists()
         {
             string localPath = "./";
             string localFilePath = Path.Combine(localPath, filename);
