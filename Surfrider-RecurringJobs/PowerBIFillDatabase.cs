@@ -41,6 +41,7 @@ namespace Surfrider.Jobs
 
         }
 
+        // Task 101
         private static async Task CommitProductionDataAsync(IList<Guid> newCampaignsIds)
         {
             throw new NotImplementedException();
@@ -61,17 +62,16 @@ namespace Surfrider.Jobs
         // returns a dictionary of {campaignId; riverName}
         private static async Task<IDictionary<Guid, string>> SelectRiversAsync(IList<Guid> newCampaignsIds)
         {
-            IRiverPipeline RiverPipeline = new RiverPipeline(Helper.GetConnectionString());
+            IRiverPipeline riverPipeline = new RiverPipeline(Helper.GetConnectionString());
             // 1. On recupere les "id" des rivieres des nouvelles campagnes
-            var RiversIdsFromNewCampaigns = await RiverPipeline.RetrieveSuccessfullComputedCampaignsRiversAsync(newCampaignsIds);
+            IDictionary<string, Guid> riversIdsFromNewCampaigns = await riverPipeline.RetrieveRiversFromSuccessfullyComputedCampaignsAsync(newCampaignsIds);
             // 2. On recupere les campaignId des anciennes campaign qui sont concernées par les rivieres des nouvelles campagnes
-            // on donne donc en entrée la liste des rivieres pour lesquelles il faut recup des campaign
-            // /!\ CA VA POSER PROBLEME
-            // là je suis entrain de mélanger des campaignId qui sont dans la table pipelines, et des campaignId qui
-            // viennent dans la table campaign (qui ont été traitées auparavant)
-            var CampaignIdsFromOldCampaigns = await RiverPipeline.GetOldCampaignsFromRivers(RiversIdsFromNewCampaigns.Select(x => x.Value).ToList<string>());
+            IDictionary<string, Guid> riversIdsFromOldCampaigns = await riverPipeline.GetOldCampaignsFromRivers(riversIdsFromNewCampaigns.Select(x => x.Key).ToList<string>());
 
-            throw new NotImplementedException();
+            // now I have two dictionnaries : one associates new campaigns and river, one associates old campaigns and river
+            IDictionary<string, Guid> allCampaignsAndRivers = riverPipeline.MergeCampaignRiverDictionnaries(riversIdsFromNewCampaigns, riversIdsFromOldCampaigns);
+            
+            return new Dictionary<Guid, string>();
         }
 
         private static async Task ComputeOnCampaignsAsync(IList<Guid> newCampaignsIds)
