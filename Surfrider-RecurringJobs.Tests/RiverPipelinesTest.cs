@@ -43,7 +43,7 @@ namespace Surfrider.Jobs_RecurringJobs.Tests
             campaignIds.Add(campaignIdSuccessfullyComputed_1);
             campaignIds.Add(campaignIdSuccessfullyComputed_2);
             campaignIds.Add(campaignIdFailedComputed_1);
-            var successfullCampaigns =  await riverPipeline.RetrieveSuccessfullComputedCampaignsRiversAsync(campaignIds);
+            var successfullCampaigns =  await riverPipeline.RetrieveRiversFromSuccessfullyComputedCampaignsAsync(campaignIds);
             
             // only two campaigns were marked as successfully computed
             Assert.IsTrue(successfullCampaigns.Keys.Count == 2);
@@ -101,7 +101,7 @@ namespace Surfrider.Jobs_RecurringJobs.Tests
 
             IDatabase Database = new PostgreDatabase(GetTestsConnectionString());
            
-            Assert..await riverPipeline.MarkRiverPipelineAsFailedAsync(new Guid(campaignId));
+            Assert.await riverPipeline.MarkRiverPipelineAsFailedAsync(new Guid(campaignId));
            
         }
         [TestMethod]

@@ -9,14 +9,20 @@ namespace Surfrider.Jobs {
     public interface IRiverPipeline
     { 
         // Returns a dictionary of 
-        // { CampaignID , RiverID }        
-        // where CampaignID is a campaign where the Campaign Pipeline has been successfull, and the RiverID is the corresponding river where
-        // the campaign has been made on.
-        Task<IDictionary<Guid, string>> RetrieveSuccessfullComputedCampaignsRiversAsync(IList<Guid> newCampaignsIds);
+        // { RiverID , CampaignID }        
+        // where RiverID is the corresponding river where the campaign has been made on
+        // and CampaignID is the campaign where the Campaign Pipeline has been successfull.
+        // /!\ : RiverID is the river name for now.
+        Task<IDictionary<string, Guid>> RetrieveRiversFromSuccessfullyComputedCampaignsAsync(IList<Guid> newCampaignsIds);
         Task<bool> ComputePipelineOnSingleRiverAsync(string riverId);
         Task MarkRiverPipelineAsSuccessedAsync(Guid campaignId);
         Task MarkRiverPipelineAsFailedAsync(Guid campaignId);
-        Task<IList<Guid>> GetOldCampaignsFromRivers(IList<string> riversIdsFromNewCampaigns);
+        // Returns a dictionary of 
+        // { RiverId , CampaignId } 
+        // where riverId is a river for which a new campaign has been made
+        // and campaignId is an old campaign made on the river RiverId.
+        Task<IDictionary<string, Guid>> GetOldCampaignsFromRivers(IList<string> riversIdsFromNewCampaigns);
+        IDictionary<Guid, string> MergeCampaignRiverDictionnaries(IDictionary<string, Guid> riversIdsFromNewCampaigns, IDictionary<string, Guid> riverIdsFromOldCampaigns);
     }
 
 }

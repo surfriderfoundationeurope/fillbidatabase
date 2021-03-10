@@ -32,8 +32,9 @@ namespace Surfrider.Jobs
             await Database.ExecuteNonQueryAsync("UPDATE bi_temp.pipelines SET river_has_been_computed = TRUE WHERE campaign_id = '@campaignId' AND campaign_has_been_computed = TRUE", Params);
         }
 
-        // Retrieve the list of each successfull campaign with the corresponding river
-        public async Task<IDictionary<Guid, string>> RetrieveSuccessfullComputedCampaignsRiversAsync(IList<Guid> newCampaignsIds)
+        // Retrieve the list of rivers from new campaigns
+        // Returns a dictionary {RiverId ; CampaignId}
+        public async Task<IDictionary<string, Guid>> RetrieveRiversFromSuccessfullyComputedCampaignsAsync(IList<Guid> newCampaignsIds)
         {
             /// CALL TO script 7_get_bi_rivers_id.sql
             // çaa ne vas pas marcher car on ne peut pas etre sur de l'ordre dans lequel les resultats sont retournes
@@ -43,18 +44,33 @@ namespace Surfrider.Jobs
 
             // pour l'instant, le seul moyen est de traiter campaign par campaign, donc de récup les river une par une
 
-            IDictionary<Guid, string> CampaignsRiversDict = new Dictionary<Guid, string>();
+            IDictionary<string, Guid> CampaignsRiversDict = new Dictionary<string, Guid>();
             IDatabase Database = new PostgreDatabase(DatabaseConnection);
-            foreach(var campaignId in newCampaignsIds){
+            foreach(var campaignId in newCampaignsIds){ // /!\ Perf!!
                 
                 IDictionary<string, string> Params = new Dictionary<string, string>();
                 Params.Add("campaignId", campaignId.ToString());
                 var riverName = await Database.ExecuteNonQueryScriptAsync("./SqlScripts/7_get_bi_rivers_id.sql", Params);
                 if(riverName.Status == ScriptStatusEnum.OK){
-                    CampaignsRiversDict.Add(campaignId, (string)riverName.Result);    
+                    CampaignsRiversDict.Add((string)riverName.Result, campaignId);    
                 }
             }
             return CampaignsRiversDict;
+        }
+
+        public Task<IDictionary<Guid, string>> GetOldCampaignsFromRivers(IList<string> riversIdsFromNewCampaigns)
+        {
+            throw new NotImplementedException();
+        }
+
+        Task<IDictionary<string, Guid>> IRiverPipeline.GetOldCampaignsFromRivers(IList<string> riversIdsFromNewCampaigns)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IDictionary<Guid, string> MergeCampaignRiverDictionnaries(IDictionary<string, Guid> riversIdsFromNewCampaigns, IDictionary<string, Guid> riverIdsFromOldCampaigns)
+        {
+            throw new NotImplementedException();
         }
     }
 }
