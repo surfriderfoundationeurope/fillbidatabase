@@ -25,7 +25,7 @@ FROM campaign.campaign
 WHERE id IN (@campaignID)
 ;
 
--- QUERY 3: insert data from campaign.trash to bi_temp.trasg
+-- QUERY 3: insert data from campaign.trash to bi_temp.trash
 INSERT INTO bi_temp.trash (id, id_ref_campaign_fk, the_geom, elevation, id_ref_trash_type_fk, precision, id_ref_model_fk, time, lat, lon, createdon, pipeline_id )
 SELECT
 

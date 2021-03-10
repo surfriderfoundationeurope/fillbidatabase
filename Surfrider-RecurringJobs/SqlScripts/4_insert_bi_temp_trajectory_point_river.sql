@@ -75,8 +75,8 @@ WHERE st_distance(closest_point_the_geom, trajectory_point_the_geom) < 100
 ;
 
 -- QUERY 3: creates partial spatial index on trajectory_point_river
-
 -- on id_ref_campaign_fk
+
 DROP INDEX IF EXISTS bi_temp.trajectory_point_river_id_ref_trajectory_point_fk;
 
 CREATE INDEX trajectory_point_river_id_ref_trajectory_point_fk
