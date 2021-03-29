@@ -77,7 +77,6 @@ To install Surfrider-Recuring Jobs, follow these steps:
 
 
 ### **Usage**
-<!---TODO: It's a code block illustrating common usage that might cover basic choices that may affect usage (for instance, if JavaScript, cover promises/callbacks, ES6). If CLI importable, code block indicating both import functionality and usage (if CLI functionality exists, add CLI subsection).If relevant, point to a runnable file for the usage code. Add run commands and examples you think users will find useful--->
 
 To use `Surfrider-RecurringJobs`, follow these steps:
 
@@ -96,8 +95,8 @@ To use `Surfrider-RecurringJobs`, follow these steps:
 * Npgsql (4.1.3.1)
 * System.Data.SqlClient (4.8.1) 
 
-<!--- If an external API file is work in progress and/or you are planning to host API specification in the Swagger documentation, you can use the text below as exaple: add, duplicate or remove as required -->
-*SOON: To see API specification used by this repository browse to the Swagger documentation (currently not available).*
+<!--- If an external API file is work in progress and/or you are planning to host API specification in the Swagger documentation, you can use the text below as exaple: add, duplicate or remove as required 
+*SOON: To see API specification used by this repository browse to the Swagger documentation (currently not available).* -->
 
 ## **Build and Test**
 
@@ -141,7 +140,7 @@ Special thanks to all our [Contributors](https://github.com/orgs/surfriderfounda
 
 ## **License**
 
-We’re using the [GNU General Public License (GPL) version 3 - `GPLv3`](https://www.gnu.org/licenses/gpl-3.0.en.html) - a free, copyleft license for software and other kinds of works.
+We’re using the `MIT` License. For more details, check [`LICENSE`](https://github.com/surfriderfoundationeurope/fillbidatabase/blob/master/LICENSE) file.
 
 ## **Additional information**
 
