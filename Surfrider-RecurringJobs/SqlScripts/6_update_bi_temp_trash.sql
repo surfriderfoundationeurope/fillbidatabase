@@ -51,6 +51,6 @@ WHERE ta.id = t.id
 ;
 
 -- QUERY 3: creates partial spatial indexes
-DROP INDEX IF EXISTS bi_temp_trash_geom;
+DROP INDEX IF EXISTS bi_temp.bi_temp_trash_geom;
 CREATE INDEX bi_temp_trash_geom ON bi_temp.trash using gist(the_geom)
 WHERE id_ref_campaign_fk IN (@campaignID);
