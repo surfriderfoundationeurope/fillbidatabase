@@ -88,11 +88,11 @@ WHERE trash_n.id_ref_campaign_fk = c.id AND c.id IN (@campaignID);
 
 DROP INDEX IF EXISTS bi_temp.campaign_start_point;
 CREATE INDEX campaign_start_point ON bi_temp.campaign USING gist(start_point)
-WHERE id_ref_campaign_fk IN (@campaignID);
+WHERE id IN (@campaignID);
 
 ;
 
 DROP INDEX IF EXISTS bi_temp.campaign_end_point;
-CREATE INDEX campaign_end_point ON bi_temp.campaign USING gist(end_point);
-WHERE id_ref_campaign_fk IN (@campaignID)
+CREATE INDEX campaign_end_point ON bi_temp.campaign USING gist(end_point)
+WHERE id IN (@campaignID)
 ;
