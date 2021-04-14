@@ -49,6 +49,6 @@ WHERE id_ref_campaign_fk in (@campaignID)
 
 -- QUERY 5: creates partial spatial index on trajectory point geometry
 
-DROP INDEX IF EXISTS bi_temp_trajectory_point;
+DROP INDEX IF EXISTS bi_temp.bi_temp_trajectory_point;
 CREATE INDEX bi_temp_trajectory_point on bi_temp.trajectory_point (the_geom) WHERE id_ref_campaign_fk IN (@campaignID);
 
