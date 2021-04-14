@@ -11,7 +11,7 @@ for table bi_temp.campaign
 */
 
 -- QUERY 1: drops and creates indexes
-DROP INDEX IF EXISTS bi_temp_campaign_id;
+DROP INDEX IF EXISTS bi_temp.bi_temp_campaign_id;
 CREATE INDEX bi_temp_campaign_id
 ON bi_temp.campaign (id)
 WHERE id IN (@campaignID);
