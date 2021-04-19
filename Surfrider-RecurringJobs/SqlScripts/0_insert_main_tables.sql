@@ -1,15 +1,6 @@
 /*
 This script migrates data from campaign.* to bi_temp.*
 */
-
--- QUERY 1: insert campaign ids in bi_temp.pipelines
-
-INSERT INTO bi_temp.pipelines (campaign_id)
-SELECT id
-FROM campaign.campaign
-WHERE has_been_computed = Null
-;
-
 -- QUERY 2: insert data from campaign.campaign to bi_temp.campaign
 INSERT INTO bi_temp.campaign (id, locomotion, isaidriven, remark, id_ref_user_fk, riverside, createdon, pipeline_id)
 SELECT
