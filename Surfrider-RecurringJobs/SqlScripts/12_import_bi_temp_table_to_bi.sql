@@ -7,7 +7,7 @@ insert into bi.campaign (id,locomotion,isaidriven,remark,id_ref_user_fk,riversid
 select
 id, locomotion, isaidriven, remark, id_ref_user_fk, riverside, start_date, end_date, start_point, end_point, total_distance, avg_speed, duration, start_point_distance_sea, end_point_distance_sea, trash_count, distance_start_end, id_ref_model_fk, createdon
 from bi_temp.campaign
-where pipeline_id in (@pipeline_ids) AND id_ref_campaign_fk in (@campaign_ids)
+where pipeline_id in (@pipeline_ids) AND id in (@campaign_ids)
 ;
 
 -- QUERY 2: migration for table capaign_river
