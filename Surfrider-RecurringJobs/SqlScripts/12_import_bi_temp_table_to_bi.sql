@@ -7,7 +7,7 @@ insert into bi.campaign (id,locomotion,isaidriven,remark,id_ref_user_fk,riversid
 select
 id, locomotion, isaidriven, remark, id_ref_user_fk, riverside, start_date, end_date, start_point, end_point, total_distance, avg_speed, duration, start_point_distance_sea, end_point_distance_sea, trash_count, distance_start_end, id_ref_model_fk, createdon
 from bi_temp.campaign
-where pipeline_id in (@pipeline_ids) AND id in (@campaign_ids)
+where pipeline_id in (@pipelineID) AND id in (@campaign_ids)
 ;
 
 -- QUERY 2: migration for table capaign_river
@@ -15,7 +15,7 @@ insert into bi_temp.campaign_river (id, id_ref_campaign_fk, river_name, id_ref_r
 select
 id, id_ref_campaign_fk, river_name, id_ref_river_fk, distance, the_geom, createdon
 from bi_temp.campaign_river
-where pipeline_id  in (@pipeline_ids) AND id_ref_campaign_fk in (@campaign_ids)
+where pipeline_id  in (@pipelineID) AND id_ref_campaign_fk in (@campaign_ids)
 ;
 
 -- QUERY 3: migration for table trajectory_point
@@ -23,7 +23,7 @@ insert into bi.trajectory_point (id, the_geom, id_ref_campaign_fk, elevation, di
 select
 id, the_geom, id_ref_campaign_fk, elevation, distance, time_diff, time, speed, lat, lon, createdon
 from bi_temp.trajectory_point tp
-where pipeline_id in (@pipeline_ids) AND id_ref_campaign_fk in (@campaign_ids)
+where pipeline_id in (@pipelineID) AND id_ref_campaign_fk in (@campaign_ids)
 ;
 
 -- QUERY 4: migration for table trajectory_point_river
@@ -31,7 +31,7 @@ insert into bi.trajectory_point_river (id, id_ref_trajectory_point_fk, id_ref_ca
 select
 id, id_ref_trajectory_point_fk, id_ref_campaign_fk, id_ref_river_fk, trajectory_point_the_geom, river_the_geom, closest_point_the_geom, distance_river_trajectory_point, projection_trajectory_point_river_the_geom, importance, river_name, createdon
 from bi_temp.trajectory_point_river
-where pipeline_id in (@pipeline_ids) AND id_ref_campaign_fk in (@campaign_ids)
+where pipeline_id in (@pipelineID) AND id_ref_campaign_fk in (@campaign_ids)
 ;
 
 -- QUERY 5: migration for table trash
