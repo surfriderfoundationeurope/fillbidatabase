@@ -51,7 +51,7 @@ where pipeline_id in (@pipelineID) AND id_ref_campaign_fk in (@campaignID)
 ;
 
 -- QUERY 7: update table river
-update bi.river
+update bi.river r
 set count_trash = bi_temp_r.count_trash ,
     distance_monitored = bi_temp_r.distance_monitored ,
     the_geom_monitored = bi_temp_r.the_geom_monitored ,
