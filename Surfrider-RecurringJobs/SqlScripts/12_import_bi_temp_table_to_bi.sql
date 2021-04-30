@@ -11,7 +11,7 @@ where pipeline_id in (@pipelineID) AND id in (@campaignID)
 ;
 
 -- QUERY 2: migration for table capaign_river
-insert into bi_temp.campaign_river (id, id_ref_campaign_fk, river_name, id_ref_river_fk, distance, the_geom, createdon)
+insert into bi.campaign_river (id, id_ref_campaign_fk, river_name, id_ref_river_fk, distance, the_geom, createdon)
 select
 id, id_ref_campaign_fk, river_name, id_ref_river_fk, distance, the_geom, createdon
 from bi_temp.campaign_river
