@@ -41,5 +41,9 @@ INSERT INTO logs.bi
 	@scriptVersion,
 	@failedStep
 
-	)
+	);
+
+update campaign.campaign
+set has_been_computed = (@campaign_has_been_compute AND @river_has_been_computed)
+where id in (@campaignID);
 
